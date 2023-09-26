@@ -103,3 +103,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
+
+REST_FRAMEWORK = {
+    'PAGE_SIZE': 5,
+}
