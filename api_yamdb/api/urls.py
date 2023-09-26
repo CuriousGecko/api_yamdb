@@ -1,7 +1,6 @@
 from api.views import TitleViewSet, CategoryViewSet, GenreViewSet
 from django.urls import include, path
 from rest_framework import routers
-from django.urls import path, include
 
 from api.views import APISignUp, APIToken
 
@@ -17,6 +16,7 @@ auth_urls = [
     path(
         'token/', APIToken.as_view(), name='token'
     )
+]
 
 urlpatterns = [
     path('', include(router.urls)),
