@@ -1,5 +1,3 @@
-from .serializers import CategorySerializer, GenreSerializer, TitleSerializer
-from reviews.models import Category, Genre, Title
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import filters, viewsets, mixins
 from django.contrib.auth import get_user_model
@@ -7,6 +5,9 @@ from django.core.mail import send_mail
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
+
+from .serializers import CategorySerializer, GenreSerializer, TitleSerializer
+from reviews.models import Category, Genre, Title
 from api.serializers import SignUpSerializer
 
 
@@ -52,7 +53,7 @@ class APISignUp(APIView):
         )
         if serializer.is_valid(raise_exception=True):
             User.objects.create_user(
-                **request.data
+                **request.data,
             )
         user = User.objects.get(username=request.data.get('username'))
         send_mail(
