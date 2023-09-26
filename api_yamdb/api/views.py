@@ -1,10 +1,43 @@
+from django.shortcuts import render
+from .serializers import CategorySerializer, GenreSerializer, TitleSerializer
+from reviews.models import Category, Genre, Title
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import filters, viewsets, mixins
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
-
 from api.serializers import SignUpSerializer
+
+class CategoryViewSet(
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    pagination_class = PageNumberPagination
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name',)
+    # permission_classes = (IsOwnerOrReadOnly, )
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name',)
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name',)
 
 User = get_user_model()
 
