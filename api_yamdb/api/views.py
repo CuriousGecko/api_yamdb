@@ -1,14 +1,17 @@
-from rest_framework.pagination import PageNumberPagination
-from rest_framework import filters, viewsets, mixins
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from rest_framework import filters, mixins, viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
 
-from .serializers import CategorySerializer, GenreSerializer, TitleSerializer
+from api.serializers import (CategorySerializer, GenreSerializer,
+                             SignUpSerializer, TitleSerializer)
+from api_yamdb.settings import PRODUCT_EMAIL
 from reviews.models import Category, Genre, Title
-from api.serializers import SignUpSerializer
+
+User = get_user_model()
 
 
 class CategoryViewSet(
@@ -41,32 +44,31 @@ class TitleViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
 
 
-User = get_user_model()
-
-
 class APISignUp(APIView):
     """Регистрирует пользователя и отправляет код подтверждения на email."""
 
     def post(self, request):
         serializer = SignUpSerializer(
-            data=request.data
+            data=request.data,
         )
-        if serializer.is_valid(raise_exception=True):
-            User.objects.create_user(
-                **request.data,
-            )
-        user = User.objects.get(username=request.data.get('username'))
+        serializer.is_valid(raise_exception=True)
+        user, created = User.objects.get_or_create(
+            **serializer.validated_data,
+        )
+        email = serializer.validated_data.get('email')
         send_mail(
             subject='Запрошен код подтверждения для доступа к API YaMDb.',
             message=(
-                f'Ваш confirmation_code: {user.confirmation_code}'
+                f'Ваш код подтверждения: {user.confirmation_code}'
             ),
-            from_email='Cyber@Pochta.ai',
-            recipient_list=[request.data.get('email')],
+            from_email=PRODUCT_EMAIL,
+            recipient_list=(
+                email,
+            ),
             fail_silently=False,
         )
         return Response(
-            user.confirmation_code, status=HTTP_200_OK
+            serializer.validated_data, status=HTTP_200_OK
         )
 
 
