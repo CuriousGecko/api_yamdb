@@ -14,8 +14,8 @@ auth_urls = [
         'signup/', APISignUp.as_view(), name='signup',
     ),
     path(
-        'token/', APIToken.as_view(), name='token'
-    )
+        'token/', APIToken.as_view(), name='token',
+    ),
 ]
 
 urlpatterns = [

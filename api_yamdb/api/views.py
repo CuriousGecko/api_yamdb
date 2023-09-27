@@ -1,14 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from rest_framework import filters, mixins, viewsets
+from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 
 from api.serializers import (CategorySerializer, GenreSerializer,
-                             SignUpSerializer, TitleSerializer)
+                             SignUpSerializer, TitleSerializer,
+                             TokenSerializer)
 from api_yamdb.settings import PRODUCT_EMAIL
+from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title
 
 User = get_user_model()
@@ -68,9 +71,33 @@ class APISignUp(APIView):
             fail_silently=False,
         )
         return Response(
-            serializer.validated_data, status=HTTP_200_OK
+            serializer.validated_data, status=HTTP_200_OK,
         )
 
 
 class APIToken(APIView):
-    pass
+    """Вернет JWT токен."""
+
+    def post(self, request):
+        serializer = TokenSerializer(
+            data=request.data,
+        )
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User,
+            username=request.data.get('username')
+        )
+        if (
+            serializer.validated_data.get('confirmation_code')
+            == str(user.confirmation_code)
+        ):
+            token = {
+                'token': f'{AccessToken.for_user(user)}'
+            }
+            return Response(
+                token, status=HTTP_200_OK,
+            )
+        return Response(
+            'Предоставленный код подтверждения неверен.',
+            status=HTTP_400_BAD_REQUEST,
+        )
