@@ -75,6 +75,7 @@ class SignUpSerializer(serializers.Serializer):
     )
 
     def validate_username(self, value):
+        """Проверит наличие недопустимых символов в имени пользователя."""
         if re.search(r'^[\w.@+-]+\Z', value) is None:
             raise serializers.ValidationError(
                 f'Имя пользователя {value} содержит недопустимые символы.'
@@ -86,6 +87,7 @@ class SignUpSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
+        """Проверит наличие учетной записи пользователя в БД."""
         username = data.get('username')
         email = data.get('email')
         if (
