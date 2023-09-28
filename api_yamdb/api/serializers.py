@@ -1,5 +1,7 @@
 import re
 
+from django.contrib.auth import get_user_model
+from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.fields import CharField, EmailField
 from rest_framework.relations import SlugRelatedField
@@ -8,11 +10,15 @@ from datetime import date
 from reviews.models import Category, Genre, GenreTitle, Title
 from users.models import CustomUser
 
+User = get_user_model()
 
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug')
+        fields = (
+            'name',
+            'slug',
+        )
         model = Category
         lookup_field = 'slug'
 
@@ -20,18 +26,35 @@ class CategorySerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug')
+        fields = (
+            'name',
+            'slug',
+        )
         model = Genre
         lookup_field = 'slug'
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    category = SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
-    genre = serializers.SlugRelatedField(slug_field='slug', queryset=Genre.objects.all(), many=True)
+    category = SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True,
+    )
     # rating = None
 
     class Meta:
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category',
+        )
         # Добавить - 'rating',
         model = Title
 
@@ -45,13 +68,11 @@ class TitleSerializer(serializers.ModelSerializer):
 # aggregate - Для рейтинга
 
         
-class SignUpSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = (
-            'username',
-            'email',
-        )
+class SignUpSerializer(serializers.Serializer):
+    email = serializers.EmailField(
+        max_length=254,
+    )
+    username = serializers.CharField(max_length=150)
 
     def validate_username(self, value):
         if re.search(r'^[\w.@+-]+\Z', value) is None:
@@ -63,6 +84,26 @@ class SignUpSerializer(serializers.ModelSerializer):
                 f'Недопустимое имя пользователя: me.'
             )
         return value
+
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        if (
+            User.objects.filter(username=username).exists()
+            and User.objects.get(username=username).email != email
+        ):
+            raise serializers.ValidationError(
+                f'Пользователь с именем {username} уже существует.'
+            )
+        if (
+            User.objects.filter(email=email).exists()
+            and User.objects.get(email=email).username != username
+        ):
+            raise serializers.ValidationError(
+                f'Пользователь с почтовым адресом {email} '
+                f'уже существует.'
+            )
+        return data
 
 
 class TokenSerializer(serializers.Serializer):
