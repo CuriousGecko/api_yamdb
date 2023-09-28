@@ -1,10 +1,42 @@
 import uuid
 
 from django.contrib.auth.models import AbstractUser
-from django.db.models import EmailField, UUIDField
+from django.db.models import (EmailField, UUIDField, TextChoices, CharField,
+                              TextField)
 
 
 class CustomUser(AbstractUser):
+    class Roles(TextChoices):
+        USER = 'user'
+        MODERATOR = 'moderator'
+        ADMIN = 'admin'
+
+    role = CharField(
+        max_length=255,
+        default=Roles.USER,
+        choices=Roles.choices,
+    )
+    username = CharField(
+        'Имя пользователя',
+        max_length=150,
+        unique=True,
+        blank=False,
+        null=False,
+    )
+    first_name = CharField(
+        'Имя',
+        max_length=150,
+        blank=True,
+    )
+    last_name = CharField(
+        'Фамилия',
+        max_length=150,
+        blank=True,
+    )
+    bio = TextField(
+        'О пользователе',
+        blank=True,
+    )
     email = EmailField(
         'Электронная почта',
         max_length=254,
