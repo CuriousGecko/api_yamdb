@@ -1,14 +1,12 @@
 import re
 
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 from rest_framework import serializers
-from rest_framework.fields import CharField, EmailField
+from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 from datetime import date
 from reviews.models import Category, Genre, GenreTitle, Title
-from users.models import CustomUser
 
 User = get_user_model()
 
@@ -69,10 +67,12 @@ class TitleSerializer(serializers.ModelSerializer):
 
         
 class SignUpSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=150,
+    )
     email = serializers.EmailField(
         max_length=254,
     )
-    username = serializers.CharField(max_length=150)
 
     def validate_username(self, value):
         if re.search(r'^[\w.@+-]+\Z', value) is None:
