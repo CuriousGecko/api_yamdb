@@ -5,9 +5,9 @@ from api.views import (APISignUp, APIToken, CategoryViewSet, GenreViewSet,
                        TitleViewSet)
 
 router = routers.DefaultRouter()
-router.register(r'titles', TitleViewSet)
-router.register(r'categories', CategoryViewSet)
-router.register(r'genre', GenreViewSet)
+router.register('titles', TitleViewSet)
+router.register('categories', CategoryViewSet)
+router.register('genre', GenreViewSet)
 
 auth_urls = [
     path(
