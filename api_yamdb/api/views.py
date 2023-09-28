@@ -8,36 +8,56 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
 from api.serializers import SignUpSerializer
+from django_filters.rest_framework import DjangoFilterBackend
 
 
-class CategoryViewSet(
+class BaseViewSet(
     mixins.ListModelMixin,
     mixins.DestroyModelMixin,
     mixins.CreateModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+
+
+class CategoryViewSet(BaseViewSet):
+    """Получение списка категорий - доступно всем без токена.
+    Создание категории, удаление категории - только администратору.
+    """
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    lookup_field = 'slug'
     # permission_classes = (IsOwnerOrReadOnly, )
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(BaseViewSet):
+    """Получение списка жанров - доступно всем без токена.
+    Создание и удаление жанра - только администратору.
+    Удаление происходит по slug.
+    """
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    pagination_class = PageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
+    # Это поле (оно же добавлено в serializers) позволяет сделать маршруты 
+    # автоматически по slug, по дефолту установлены ID. Т.е.
+    # раньше, чтобы получить объект - http://127.0.0.1:8000/api/v1/genre/1/
+    # теперь http://127.0.0.1:8000/api/v1/genre/skazka/
+    lookup_field = 'slug'
 
 
-class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+
+class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+                   BaseViewSet):
+    """Получение списка произведений - доступно всем без токена.
+    Фильтрация по slug, году, названию, году.
+    Создание, часчтичное изменение, удаление - только администратору. 
+    Нельзя добавлять произведения, которые еще не вышли.
+    Получение объекта по titles_id - доступно всем без токена.
+    """
+    queryset = Title.objects.prefetch_related('genre').select_related('category')
     serializer_class = TitleSerializer
-    pagination_class = PageNumberPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year') 
 
 
 User = get_user_model()
