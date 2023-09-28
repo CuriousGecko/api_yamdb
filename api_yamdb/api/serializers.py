@@ -54,7 +54,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         )
 
     def validate_username(self, value):
-        if re.search(r'^[\w@./+\-]+$', value) is None:
+        if re.search(r'^[\w.@+-]+\Z', value) is None:
             raise serializers.ValidationError(
                 f'Имя пользователя {value} содержит недопустимые символы.'
             )
