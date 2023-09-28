@@ -1,3 +1,5 @@
+import re
+
 from rest_framework import serializers
 from rest_framework.fields import CharField, EmailField
 from rest_framework.relations import SlugRelatedField
@@ -28,21 +30,24 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
         
-# class SignUpSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = CustomUser
-#         fields = (
-#             'username',
-#             'email',
-#         )
+class SignUpSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = (
+            'username',
+            'email',
+        )
 
-class SignUpSerializer(serializers.Serializer):
-    username = CharField(
-        max_length=150,
-    )
-    email = EmailField(
-        max_length=254,
-    )
+    def validate_username(self, value):
+        if re.search(r'^[\w@./+\-]+$', value) is None:
+            raise serializers.ValidationError(
+                f'Имя пользователя {value} содержит недопустимые символы.'
+            )
+        if value == 'me':
+            raise serializers.ValidationError(
+                f'Недопустимое имя пользователя: me.'
+            )
+        return value
 
 
 class TokenSerializer(serializers.Serializer):
