@@ -7,7 +7,7 @@ from django.db.models import EmailField, UUIDField
 class CustomUser(AbstractUser):
     email = EmailField(
         'Электронная почта',
-        max_length=100,
+        max_length=254,
         unique=True,
         blank=False,
         null=False,

@@ -1,9 +1,9 @@
-from datetime import date
-from reviews.models import Title, Category, Genre, GenreTitle
 from rest_framework import serializers
+from rest_framework.fields import CharField, EmailField
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
-from rest_framework.serializers import ModelSerializer
+from datetime import date
+from reviews.models import Category, Genre, GenreTitle, Title
 from users.models import CustomUser
 
 
@@ -40,14 +40,28 @@ class TitleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Проверьте год выпуска!')
         return value
 
-
-
-class SignUpSerializer(ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = (
-            'username',
-            'email',
-        )
-
 # aggregate - Для рейтинга
+
+        
+# class SignUpSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = CustomUser
+#         fields = (
+#             'username',
+#             'email',
+#         )
+
+class SignUpSerializer(serializers.Serializer):
+    username = CharField(
+        max_length=150,
+    )
+    email = EmailField(
+        max_length=254,
+    )
+
+
+class TokenSerializer(serializers.Serializer):
+    username = CharField(
+        max_length=150,
+    )
+    confirmation_code = CharField()
