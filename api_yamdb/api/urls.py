@@ -1,13 +1,14 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from api.views import (APISignUp, APIToken, CategoryViewSet, GenreViewSet,
-                       TitleViewSet)
+from api.views import (APISignUp, APIToken, CategoryViewSet,
+                       GenreViewSet, TitleViewSet, UsersViewSet)
 
 router = routers.DefaultRouter()
-router.register('titles', TitleViewSet)
-router.register('categories', CategoryViewSet)
-router.register('genre', GenreViewSet)
+router.register('titles', TitleViewSet, basename='titles',)
+router.register('categories', CategoryViewSet, basename='categories',)
+router.register('genre', GenreViewSet, basename='genre',)
+router.register('users', UsersViewSet, basename='users',)
 
 auth_urls = [
     path(

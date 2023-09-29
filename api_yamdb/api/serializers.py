@@ -4,14 +4,14 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
-from rest_framework.validators import UniqueTogetherValidator
 from datetime import date
+
 from reviews.models import Category, Genre, GenreTitle, Title
 
 User = get_user_model()
 
-class CategorySerializer(serializers.ModelSerializer):
 
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = (
             'name',
@@ -22,7 +22,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
         fields = (
             'name',
@@ -42,6 +41,7 @@ class TitleSerializer(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         many=True,
     )
+
     # rating = None
 
     class Meta:
@@ -63,9 +63,7 @@ class TitleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Проверьте год выпуска!')
         return value
 
-# aggregate - Для рейтинга
 
-        
 class SignUpSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,
@@ -78,7 +76,7 @@ class SignUpSerializer(serializers.Serializer):
         """Проверит наличие недопустимых символов в имени пользователя."""
         if re.search(r'^[\w.@+-]+\Z', value) is None:
             raise serializers.ValidationError(
-                f'Имя пользователя {value} содержит недопустимые символы.'
+                f'Имя пользователя {value} содержит недопустимые символы.',
             )
         if value == 'me':
             raise serializers.ValidationError(
@@ -91,15 +89,15 @@ class SignUpSerializer(serializers.Serializer):
         username = data.get('username')
         email = data.get('email')
         if (
-            User.objects.filter(username=username).exists()
-            and User.objects.get(username=username).email != email
+                User.objects.filter(username=username).exists()
+                and User.objects.get(username=username).email != email
         ):
             raise serializers.ValidationError(
                 f'Пользователь с именем {username} уже существует.'
             )
         if (
-            User.objects.filter(email=email).exists()
-            and User.objects.get(email=email).username != username
+                User.objects.filter(email=email).exists()
+                and User.objects.get(email=email).username != username
         ):
             raise serializers.ValidationError(
                 f'Пользователь с почтовым адресом {email} '
@@ -113,3 +111,32 @@ class TokenSerializer(serializers.Serializer):
         max_length=150,
     )
     confirmation_code = CharField()
+
+
+class ForAdminUsersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'role',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+        )
+
+    def validate_username(self, value):
+        """Проверит наличие недопустимых символов в имени пользователя."""
+        if re.search(r'^[\w.@+-]+\Z', value) is None:
+            raise serializers.ValidationError(
+                f'Имя пользователя {value} содержит недопустимые символы.',
+            )
+        if value == 'me':
+            raise serializers.ValidationError(
+                f'Недопустимое имя пользователя: me.'
+            )
+        return value
+
+
+class NotAdminUsersSerializer(ForAdminUsersSerializer):
+    role = CharField(read_only=True,)
