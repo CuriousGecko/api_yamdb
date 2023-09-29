@@ -1,7 +1,8 @@
 from django.shortcuts import render
-from .serializers import CategorySerializer, GenreSerializer, TitleSerializer
-from reviews.models import Category, Genre, Title
+from .serializers import CategorySerializer, GenreSerializer, TitleSerializer, ReviewSerializer, CommentSerializer
+from reviews.models import Category, Genre, Title, Review, Comment
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import filters, viewsets, mixins
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
@@ -9,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
 from api.serializers import SignUpSerializer
+from permissions import IsAuthorOrReadOnly
 
 class CategoryViewSet(
     mixins.ListModelMixin,
@@ -70,3 +72,18 @@ class APISignUp(APIView):
 
 class APIToken(APIView):
     pass
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    # pagination_class = PageNumberPagination
+    # filter_backends = (filters.SearchFilter, )
+    # search_fields = ('name',)
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
