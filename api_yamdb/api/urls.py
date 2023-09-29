@@ -1,9 +1,8 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from api.views import (APISignUp, APIToken, CategoryViewSet, GenreViewSet,
-                       TitleViewSet, ReviewViewSet, CommentViewSet,
-                       UsersViewSet,)
+from api.views import (APISignUp, APIToken, CategoryViewSet, CommentViewSet,
+                       GenreViewSet, ReviewViewSet, TitleViewSet, UsersViewSet)
 
 router_v1 = routers.DefaultRouter()
 router_v1.register('titles', TitleViewSet, basename='titles',)
@@ -30,9 +29,9 @@ auth_urls = [
 
 urlpatterns = [
     path(
-      '', include(router_v1.urls)
+        '', include(router_v1.urls)
     ),
     path(
-      'auth/', include(auth_urls)
+        'auth/', include(auth_urls)
     ),
 ]

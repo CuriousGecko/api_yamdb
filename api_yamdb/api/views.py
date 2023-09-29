@@ -1,23 +1,24 @@
-from reviews.models import Category, Genre, Title, Review, Comment
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework import filters, viewsets, mixins
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
-from api.serializers import (CategorySerializer, GenreSerializer,
+from api.permissions import IsAdmin, IsAuthorOrReadOnly, OwnerOnly
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             ForAdminUsersSerializer, GenreSerializer,
+                             NotAdminUsersSerializer, ReviewSerializer,
                              SignUpSerializer, TitleSerializer,
-                             TokenSerializer, ReviewSerializer,
-                             ForAdminUsersSerializer, CommentSerializer,
-                             NotAdminUsersSerializer,)
-from api.permissions import IsAuthorOrReadOnly, IsAdmin, OwnerOnly
+                             TokenSerializer)
 from api_yamdb.settings import PRODUCT_EMAIL
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
