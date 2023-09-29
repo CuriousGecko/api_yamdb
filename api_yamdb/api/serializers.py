@@ -1,17 +1,32 @@
+import re
+
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
+from rest_framework.fields import CharField
+from rest_framework.relations import SlugRelatedField
+from rest_framework.validators import UniqueTogetherValidator
+from datetime import date
 from django.db.models import Avg
 from reviews.models import (
-    Title, Category, Genre, Review, Comment
+    Title, Category, Genre, Review, Comment, GenreTitle
 )
-from rest_framework import serializers
-# from rest_framework.relations import SlugRelatedField
-# from rest_framework.validators import UniqueTogetherValidator
 from rest_framework.serializers import ModelSerializer
-from users.models import CustomUser
+
+User = get_user_model()
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    category = SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+    )
+    genre = SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True,
+    )
     rating = serializers.SerializerMethodField()
-
+    
     class Meta:
         fields = (
             'name',
@@ -23,39 +38,39 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
 
     def get_rating(self, obj):
-        return Review.objects.aggregate(Avg('score'))['score__avg']
-        # Я решил попробовать вариант, который изначально писал,
-        # и он заработал, поэтому можем тут выбрать один из двух.
-        # rating = Title.objects.filter(
-        #     id=obj.id).aggregate(avg=Avg('reviews__score'))
-        # return rating.get('avg')
+        rating = Title.objects.filter(
+            id=obj.id).aggregate(avg=Avg('reviews__score'))
+        return rating.get('avg')
+    
+    def validate_year(self, value):
+        """Проверяет, что год выпуска не будущее время."""
+        year = date.today().year
+        if value > year:
+            raise serializers.ValidationError('Проверьте год выпуска!')
+        return value
 
 
 class CategorySerializer(serializers.ModelSerializer):
-
     class Meta:
-        fields = ('id', 'name', 'slug')
+        fields = (
+            'name',
+            'slug',
+        )
         model = Category
+        lookup_field = 'slug'
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
-        fields = ('id', 'name', 'slug')
-        model = Genre
-
-
-class SignUpSerializer(ModelSerializer):
-    class Meta:
-        model = CustomUser
         fields = (
-            'username',
-            'email',
+            'name',
+            'slug',
         )
+        model = Genre
+        lookup_field = 'slug'
 
 
 class ReviewSerializer(ModelSerializer):
-
     class Meta:
         model = Review
         fields = (
@@ -77,7 +92,7 @@ class ReviewSerializer(ModelSerializer):
                 'Вы уже оставляли заметку к этой записи!'
             )
         return data
-
+      
 
 class CommentSerializer(ModelSerializer):
     class Meta:
@@ -88,12 +103,3 @@ class CommentSerializer(ModelSerializer):
             'author',
             'pub_date'
         )
-
-
-# class AggregatedRatingSerializer(ModelSerializer):
-#     class Meta:
-#         model = AggregatedRating
-#         fields = (
-#             'title',
-#             'average_score'
-#         )

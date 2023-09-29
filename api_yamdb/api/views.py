@@ -1,47 +1,74 @@
-from django.shortcuts import render
-from .serializers import CategorySerializer, GenreSerializer, TitleSerializer, ReviewSerializer, CommentSerializer
+from api.serializers import (
+  CategorySerializer, GenreSerializer,
+  TitleSerializer, ReviewSerializer,
+  CommentSerializer, SignUpSerializer,
+  TokenSerializer
+)
 from reviews.models import Category, Genre, Title, Review, Comment
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import filters, viewsets, mixins
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
-from api.serializers import SignUpSerializer
 from permissions import IsAuthorOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
+from api_yamdb.settings import PRODUCT_EMAIL
+from rest_framework_simplejwt.tokens import AccessToken
 
-class CategoryViewSet(
+User = get_user_model()
+
+
+class BaseViewSet(
     mixins.ListModelMixin,
     mixins.DestroyModelMixin,
     mixins.CreateModelMixin,
     viewsets.GenericViewSet
 ):
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+
+class CategoryViewSet(BaseViewSet):
+    """Получение списка категорий - доступно всем без токена.
+    Создание категории, удаление категории - только администратору.
+    """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    pagination_class = PageNumberPagination
-    filter_backends = (filters.SearchFilter, )
-    search_fields = ('name',)
+    lookup_field = 'slug'
     # permission_classes = (IsOwnerOrReadOnly, )
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(BaseViewSet):
+    """Получение списка жанров - доступно всем без токена.
+    Создание и удаление жанра - только администратору.
+    Удаление происходит по slug.
+    """
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    pagination_class = PageNumberPagination
-    filter_backends = (filters.SearchFilter, )
-    search_fields = ('name',)
+    # Это поле (оно же добавлено в serializers) позволяет сделать маршруты 
+    # автоматически по slug, по дефолту установлены ID. Т.е.
+    # раньше, чтобы получить объект - http://127.0.0.1:8000/api/v1/genre/1/
+    # теперь http://127.0.0.1:8000/api/v1/genre/skazka/
+    lookup_field = 'slug'
 
 
-class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+
+class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+                   BaseViewSet):
+    """Получение списка произведений - доступно всем без токена.
+    Фильтрация по slug, году, названию, году.
+    Создание, часчтичное изменение, удаление - только администратору. 
+    Нельзя добавлять произведения, которые еще не вышли.
+    Получение объекта по titles_id - доступно всем без токена.
+    """
+    queryset = Title.objects.prefetch_related('genre').select_related('category')
     serializer_class = TitleSerializer
-    pagination_class = PageNumberPagination
-    filter_backends = (filters.SearchFilter, )
-    search_fields = ('name',)
-
-User = get_user_model()
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year') 
 
 
 class APISignUp(APIView):
@@ -49,37 +76,60 @@ class APISignUp(APIView):
 
     def post(self, request):
         serializer = SignUpSerializer(
-            data=request.data
+            data=request.data,
         )
-        if serializer.is_valid(raise_exception=True):
-            User.objects.create_user(
-                **request.data
-            )
-        user = User.objects.get(username=request.data.get('username'))
+        serializer.is_valid(raise_exception=True)
+        user, created = User.objects.get_or_create(
+            **serializer.validated_data,
+        )
+        email = serializer.validated_data.get('email')
         send_mail(
             subject='Запрошен код подтверждения для доступа к API YaMDb.',
             message=(
-                f'Ваш confirmation_code: {user.confirmation_code}'
+                f'Ваш код подтверждения: {user.confirmation_code}'
             ),
-            from_email='Cyber@Pochta.ai',
-            recipient_list=[request.data.get('email')],
+            from_email=PRODUCT_EMAIL,
+            recipient_list=(
+                email,
+            ),
             fail_silently=False,
         )
         return Response(
-            user.confirmation_code, status=HTTP_200_OK
+            serializer.validated_data, status=HTTP_200_OK,
         )
 
 
 class APIToken(APIView):
-    pass
+    """Вернет JWT токен."""
+
+    def post(self, request):
+        serializer = TokenSerializer(
+            data=request.data,
+        )
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User,
+            username=request.data.get('username')
+        )
+        if (
+            serializer.validated_data.get('confirmation_code')
+            == str(user.confirmation_code)
+        ):
+            token = {
+                'token': f'{AccessToken.for_user(user)}'
+            }
+            return Response(
+                token, status=HTTP_200_OK,
+            )
+        return Response(
+            'Предоставленный код подтверждения неверен.',
+            status=HTTP_400_BAD_REQUEST,
+        )
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    # pagination_class = PageNumberPagination
-    # filter_backends = (filters.SearchFilter, )
-    # search_fields = ('name',)
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
 
 
