@@ -1,13 +1,14 @@
-from django.db.models import Avg
-from django.contrib.auth import get_user_model
-from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
+import re
 from datetime import date
+
+from django.contrib.auth import get_user_model
+from django.db.models import Avg
+from rest_framework import serializers
+from rest_framework.fields import CharField
+from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ModelSerializer
 
-from reviews.models import (
-    Title, Category, Genre, Review, Comment
-)
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
@@ -78,16 +79,16 @@ class ReviewSerializer(ModelSerializer):
             'text',
             'author',
             'score',
-            'pub_date'
+            'pub_date',
         )
 
     def validate(self, data):
         author = data['author']
         title = data['title']
-        excisting_reviews = Review.objects.filter(
+        existing_reviews = Review.objects.filter(
             author=author, title=title
         )
-        if excisting_reviews.exists():
+        if existing_reviews.exists():
             raise serializers.ValidationError(
                 'Вы уже оставляли заметку к этой записи!'
             )
@@ -101,7 +102,7 @@ class CommentSerializer(ModelSerializer):
             'id',
             'text',
             'author',
-            'pub_date'
+            'pub_date',
         )
 
         

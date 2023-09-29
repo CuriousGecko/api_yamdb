@@ -21,10 +21,10 @@ class OwnerOnly(permissions.BasePermission):
 
       
 class IsAuthorOrReadOnly(permissions.BasePermission):
-  """Предоставляет доступ на редактирование только автору."""
+    """Предоставляет доступ на редактирование только автору."""
   
     def has_object_permission(self, request, view, obj):
         return (
-            self.request.method in permissions.SAFE_METHODS
+            request.method in permissions.SAFE_METHODS
             or obj.author == request.user
         )

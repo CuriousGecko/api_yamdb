@@ -1,8 +1,8 @@
 import uuid
 
 from django.contrib.auth.models import AbstractUser
-from django.db.models import (EmailField, UUIDField, TextChoices, CharField,
-                              TextField)
+from django.db.models import (CharField, EmailField, TextChoices, TextField,
+                              UUIDField)
 
 
 class CustomUser(AbstractUser):
