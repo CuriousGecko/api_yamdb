@@ -23,12 +23,9 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
 
     def get_rating(self, obj):
-        return Review.objects.aggregate(Avg('score'))['score__avg']
-        # Я решил попробовать вариант, который изначально писал,
-        # и он заработал, поэтому можем тут выбрать один из двух.
-        # rating = Title.objects.filter(
-        #     id=obj.id).aggregate(avg=Avg('reviews__score'))
-        # return rating.get('avg')
+        rating = Title.objects.filter(
+            id=obj.id).aggregate(avg=Avg('reviews__score'))
+        return rating.get('avg')
 
 
 class CategorySerializer(serializers.ModelSerializer):

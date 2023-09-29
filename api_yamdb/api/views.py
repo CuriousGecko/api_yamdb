@@ -1,5 +1,7 @@
-from django.shortcuts import render
-from .serializers import CategorySerializer, GenreSerializer, TitleSerializer, ReviewSerializer, CommentSerializer
+from .serializers import (
+    CategorySerializer, GenreSerializer,
+    TitleSerializer, ReviewSerializer, CommentSerializer
+)
 from reviews.models import Category, Genre, Title, Review, Comment
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -11,6 +13,7 @@ from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
 from api.serializers import SignUpSerializer
 from permissions import IsAuthorOrReadOnly
+
 
 class CategoryViewSet(
     mixins.ListModelMixin,
@@ -40,6 +43,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter, )
     search_fields = ('name',)
+
 
 User = get_user_model()
 
