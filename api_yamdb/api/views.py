@@ -1,11 +1,9 @@
 from api.serializers import (
-  CategorySerializer, GenreSerializer,
-  TitleSerializer, ReviewSerializer,
-  CommentSerializer, SignUpSerializer,
-  TokenSerializer
+    CategorySerializer, GenreSerializer,
+    TitleSerializer, ReviewSerializer,
+    CommentSerializer, SignUpSerializer, TokenSerializer
 )
 from reviews.models import Category, Genre, Title, Review, Comment
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import filters, viewsets, mixins
 from django.contrib.auth import get_user_model
@@ -14,7 +12,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
-from permissions import IsAuthorOrReadOnly
+from api.permissions import IsAuthorOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from api_yamdb.settings import PRODUCT_EMAIL
 from rest_framework_simplejwt.tokens import AccessToken
@@ -49,26 +47,26 @@ class GenreViewSet(BaseViewSet):
     """
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    # Это поле (оно же добавлено в serializers) позволяет сделать маршруты 
+    # Это поле (оно же добавлено в serializers) позволяет сделать маршруты
     # автоматически по slug, по дефолту установлены ID. Т.е.
     # раньше, чтобы получить объект - http://127.0.0.1:8000/api/v1/genre/1/
     # теперь http://127.0.0.1:8000/api/v1/genre/skazka/
     lookup_field = 'slug'
 
 
-
 class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                    BaseViewSet):
     """Получение списка произведений - доступно всем без токена.
     Фильтрация по slug, году, названию, году.
-    Создание, часчтичное изменение, удаление - только администратору. 
+    Создание, часчтичное изменение, удаление - только администратору.
     Нельзя добавлять произведения, которые еще не вышли.
     Получение объекта по titles_id - доступно всем без токена.
     """
-    queryset = Title.objects.prefetch_related('genre').select_related('category')
+    queryset = Title.objects.prefetch_related(
+        'genre').select_related('category')
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year') 
+    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
 
 
 class APISignUp(APIView):
