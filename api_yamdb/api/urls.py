@@ -2,12 +2,20 @@ from django.urls import include, path
 from rest_framework import routers
 
 from api.views import (APISignUp, APIToken, CategoryViewSet, GenreViewSet,
-                       TitleViewSet)
+                       TitleViewSet, ReviewViewSet, CommentViewSet)
 
 router = routers.DefaultRouter()
-router.register('titles', TitleViewSet)
-router.register('categories', CategoryViewSet)
-router.register('genre', GenreViewSet)
+router.register(r'titles', TitleViewSet)
+router.register(r'categories', CategoryViewSet)
+router.register(r'genre', GenreViewSet)
+router.register(
+    r'titles/(?P<title_id>\d+)/reviews',
+    ReviewViewSet, basename='reviews'
+)
+router.register(
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentViewSet, basename='comments'
+)
 
 auth_urls = [
     path(
@@ -22,6 +30,3 @@ urlpatterns = [
     path('', include(router.urls)),
     path('auth/', include(auth_urls)),
 ]
-
-
-

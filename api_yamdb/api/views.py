@@ -1,20 +1,23 @@
+from api.serializers import (
+  CategorySerializer, GenreSerializer,
+  TitleSerializer, ReviewSerializer,
+  CommentSerializer, SignUpSerializer,
+  TokenSerializer
+)
+from reviews.models import Category, Genre, Title, Review, Comment
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework import filters, viewsets, mixins
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from rest_framework import filters, mixins, viewsets
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
-from api.serializers import SignUpSerializer
+from permissions import IsAuthorOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
-
-from api.serializers import (CategorySerializer, GenreSerializer,
-                             SignUpSerializer, TitleSerializer,
-                             TokenSerializer)
 from api_yamdb.settings import PRODUCT_EMAIL
 from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Category, Genre, Title
 
 User = get_user_model()
 
@@ -122,3 +125,15 @@ class APIToken(APIView):
             'Предоставленный код подтверждения неверен.',
             status=HTTP_400_BAD_REQUEST,
         )
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]

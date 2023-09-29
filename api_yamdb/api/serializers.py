@@ -6,12 +6,51 @@ from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 from datetime import date
-from reviews.models import Category, Genre, GenreTitle, Title
+from django.db.models import Avg
+from reviews.models import (
+    Title, Category, Genre, Review, Comment, GenreTitle
+)
+from rest_framework.serializers import ModelSerializer
 
 User = get_user_model()
 
-class CategorySerializer(serializers.ModelSerializer):
 
+class TitleSerializer(serializers.ModelSerializer):
+    category = SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+    )
+    genre = SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True,
+    )
+    rating = serializers.SerializerMethodField()
+    
+    class Meta:
+        fields = (
+            'name',
+            'year',
+            'category',
+            'genre',
+            'rating'
+        )
+        model = Title
+
+    def get_rating(self, obj):
+        rating = Title.objects.filter(
+            id=obj.id).aggregate(avg=Avg('reviews__score'))
+        return rating.get('avg')
+    
+    def validate_year(self, value):
+        """Проверяет, что год выпуска не будущее время."""
+        year = date.today().year
+        if value > year:
+            raise serializers.ValidationError('Проверьте год выпуска!')
+        return value
+
+
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = (
             'name',
@@ -22,7 +61,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
         fields = (
             'name',
@@ -32,84 +70,36 @@ class GenreSerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    category = SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all(),
-    )
-    genre = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Genre.objects.all(),
-        many=True,
-    )
-    # rating = None
-
+class ReviewSerializer(ModelSerializer):
     class Meta:
+        model = Review
         fields = (
-            'id',
-            'name',
-            'year',
-            'description',
-            'genre',
-            'category',
+            'title',
+            'text',
+            'author',
+            'score',
+            'pub_date'
         )
-        # Добавить - 'rating',
-        model = Title
-
-    def validate_year(self, value):
-        """Проверяет, что год выпуска не будущее время."""
-        year = date.today().year
-        if value > year:
-            raise serializers.ValidationError('Проверьте год выпуска!')
-        return value
-
-# aggregate - Для рейтинга
-
-        
-class SignUpSerializer(serializers.Serializer):
-    username = serializers.CharField(
-        max_length=150,
-    )
-    email = serializers.EmailField(
-        max_length=254,
-    )
-
-    def validate_username(self, value):
-        """Проверит наличие недопустимых символов в имени пользователя."""
-        if re.search(r'^[\w.@+-]+\Z', value) is None:
-            raise serializers.ValidationError(
-                f'Имя пользователя {value} содержит недопустимые символы.'
-            )
-        if value == 'me':
-            raise serializers.ValidationError(
-                f'Недопустимое имя пользователя: me.'
-            )
-        return value
 
     def validate(self, data):
-        """Проверит наличие учетной записи пользователя в БД."""
-        username = data.get('username')
-        email = data.get('email')
-        if (
-            User.objects.filter(username=username).exists()
-            and User.objects.get(username=username).email != email
-        ):
+        author = data['author']
+        title = data['title']
+        excisting_reviews = Review.objects.filter(
+            author=author, title=title
+        )
+        if excisting_reviews.exists():
             raise serializers.ValidationError(
-                f'Пользователь с именем {username} уже существует.'
-            )
-        if (
-            User.objects.filter(email=email).exists()
-            and User.objects.get(email=email).username != username
-        ):
-            raise serializers.ValidationError(
-                f'Пользователь с почтовым адресом {email} '
-                f'уже существует.'
+                'Вы уже оставляли заметку к этой записи!'
             )
         return data
+      
 
-
-class TokenSerializer(serializers.Serializer):
-    username = CharField(
-        max_length=150,
-    )
-    confirmation_code = CharField()
+class CommentSerializer(ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = (
+            'id',
+            'text',
+            'author',
+            'pub_date'
+        )
