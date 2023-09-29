@@ -1,14 +1,10 @@
-import re
-
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
-from rest_framework.validators import UniqueTogetherValidator
 from datetime import date
 from django.db.models import Avg
 from reviews.models import (
-    Title, Category, Genre, Review, Comment, GenreTitle
+    Title, Category, Genre, Review, Comment
 )
 from rest_framework.serializers import ModelSerializer
 
@@ -26,7 +22,7 @@ class TitleSerializer(serializers.ModelSerializer):
         many=True,
     )
     rating = serializers.SerializerMethodField()
-    
+
     class Meta:
         fields = (
             'name',
@@ -41,7 +37,7 @@ class TitleSerializer(serializers.ModelSerializer):
         rating = Title.objects.filter(
             id=obj.id).aggregate(avg=Avg('reviews__score'))
         return rating.get('avg')
-    
+
     def validate_year(self, value):
         """Проверяет, что год выпуска не будущее время."""
         year = date.today().year
@@ -92,7 +88,7 @@ class ReviewSerializer(ModelSerializer):
                 'Вы уже оставляли заметку к этой записи!'
             )
         return data
-      
+
 
 class CommentSerializer(ModelSerializer):
     class Meta:
