@@ -111,6 +111,31 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (
         IsAdminModeratorAuthorOrReadOnly,
     )
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+    )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update(
+            {
+                "title": self.kwargs['title_id'],
+                "method": self.request.method
+            }
+        )
+        print(context['method'])
+        return context
+    
+    def get_queryset(self):
+        return Review.objects.select_related('author').filter(
+            title=self.kwargs.get('title_id'))
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -121,6 +146,20 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (
         IsAdminModeratorAuthorOrReadOnly,
     )
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+    )
+
+    def get_queryset(self):
+        return Comment.objects.select_related('author').filter(
+            review=self.kwargs.get('review_id'))
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        serializer.save(author=self.request.user, review=review)
 
 
 class APISignUp(APIView):
