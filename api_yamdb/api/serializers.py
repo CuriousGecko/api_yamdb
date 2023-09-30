@@ -108,11 +108,11 @@ class CommentSerializer(ModelSerializer):
 
 class SignUpSerializer(ModelSerializer):
     class Meta:
+        model = User
         fields = (
             'username',
             'email',
         )
-        model = User
 
     def validate(self, data):
         """Проверит схожесть аккаунта пользователя в БД и данных запроса."""

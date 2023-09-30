@@ -132,24 +132,21 @@ class APISignUp(APIView):
         )
         username = request.data.get('username')
         email = request.data.get('email')
-        if User.objects.filter(
-                username=username,
-                email=email,
+        if not User.objects.filter(
+            username=username,
+            email=email,
         ).exists():
-            user = User.objects.get(
-                username=username,
-                email=email,
-            )
-            serializer = SignUpSerializer(
-                user,
-                data=request.data,
-            )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
         user = User.objects.get(
             username=username,
             email=email,
         )
+        serializer = SignUpSerializer(
+            user,
+            data=request.data,
+        )
+        serializer.is_valid(raise_exception=True)
         send_mail(
             subject='Запрошен код подтверждения для доступа к API YaMDb.',
             message=(
