@@ -4,15 +4,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
-from api.permissions import (IsAdmin, IsAuthorOrReadOnly, OwnerOnly,
-                             IsAdminOrReadOnly)
+from api.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
+                             IsAdminOrReadOnly, OwnerOnly)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              ForAdminUsersSerializer, GenreSerializer,
                              NotAdminUsersSerializer, ReviewSerializer,
@@ -110,8 +109,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = (
-        IsAuthenticatedOrReadOnly,
-        IsAuthorOrReadOnly,
+        IsAdminModeratorAuthorOrReadOnly,
     )
 
 
@@ -121,8 +119,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (
-        IsAuthenticatedOrReadOnly,
-        IsAuthorOrReadOnly,
+        IsAdminModeratorAuthorOrReadOnly,
     )
 
 
@@ -228,6 +225,7 @@ class UsersViewSet(ModelViewSet):
             )
             return Response(
                 serializer.data,
+                status=HTTP_200_OK,
             )
         if request.method == 'PATCH':
             serializer = NotAdminUsersSerializer(
