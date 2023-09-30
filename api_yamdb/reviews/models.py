@@ -56,8 +56,13 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews',
     )
-    text = models.TextField('Текст обзора')
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField(
+        'Текст обзора',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
     score = models.IntegerField(
         validators=[
             MaxValueValidator(10),

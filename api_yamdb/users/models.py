@@ -4,6 +4,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models import (CharField, EmailField, TextChoices, TextField,
                               UUIDField)
 
+from users.validators import validate_username
+
 
 class CustomUser(AbstractUser):
     class Roles(TextChoices):
@@ -22,6 +24,7 @@ class CustomUser(AbstractUser):
         unique=True,
         blank=False,
         null=False,
+        validators=[validate_username],
     )
     first_name = CharField(
         'Имя',
