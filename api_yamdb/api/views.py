@@ -11,7 +11,8 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
-from api.permissions import IsAdmin, IsAuthorOrReadOnly, OwnerOnly
+from api.permissions import (IsAdmin, IsAuthorOrReadOnly, OwnerOnly,
+                             IsAdminOrReadOnly)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              ForAdminUsersSerializer, GenreSerializer,
                              NotAdminUsersSerializer, ReviewSerializer,
@@ -44,7 +45,9 @@ class CategoryViewSet(BaseViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     lookup_field = 'slug'
-    # permission_classes = (IsOwnerOrReadOnly, )
+    permission_classes = (
+        IsAdminOrReadOnly,
+    )
 
 
 class GenreViewSet(BaseViewSet):
@@ -59,13 +62,16 @@ class GenreViewSet(BaseViewSet):
     # раньше, чтобы получить объект - http://127.0.0.1:8000/api/v1/genre/1/
     # теперь http://127.0.0.1:8000/api/v1/genre/skazka/
     lookup_field = 'slug'
+    permission_classes = (
+        IsAdminOrReadOnly,
+    )
 
 
 class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                    BaseViewSet):
     """Получение списка произведений - доступно всем без токена.
     Фильтрация по slug, году, названию, году.
-    Создание, часчтичное изменение, удаление - только администратору.
+    Создание, частичное изменение, удаление - только администратору.
     Нельзя добавлять произведения, которые еще не вышли.
     Получение объекта по titles_id - доступно всем без токена.
     """
@@ -87,18 +93,37 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         'name',
         'year',
     )
+    permission_classes = (
+        IsAdminOrReadOnly,
+    )
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+    )
     
     
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Тут мог быть ваш докстринг..."""
+
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        IsAuthorOrReadOnly,
+    )
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Тут мог быть ваш докстринг..."""
+
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        IsAuthorOrReadOnly,
+    )
 
 
 class APISignUp(APIView):
