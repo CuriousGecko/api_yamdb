@@ -17,7 +17,7 @@ from api.serializers import (CategorySerializer, CommentSerializer,
                              NotAdminUsersSerializer, ReviewSerializer,
                              SignUpSerializer, TitleSerializer,
                              TokenSerializer)
-from api_yamdb.settings import PRODUCT_EMAIL
+from django.conf import settings
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -77,9 +77,9 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
     queryset = (
         Title.objects.prefetch_related(
-          'genre',
+            'genre',
         ).select_related(
-          'category',
+            'category',
         )
     )
     serializer_class = TitleSerializer
@@ -101,8 +101,8 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         'patch',
         'delete',
     )
-    
-    
+
+
 class ReviewViewSet(viewsets.ModelViewSet):
     """Тут мог быть ваш докстринг..."""
 
@@ -130,17 +130,32 @@ class APISignUp(APIView):
         serializer = SignUpSerializer(
             data=request.data,
         )
+        username = request.data.get('username')
+        email = request.data.get('email')
+        if User.objects.filter(
+                username=username,
+                email=email,
+        ).exists():
+            user = User.objects.get(
+                username=username,
+                email=email,
+            )
+            serializer = SignUpSerializer(
+                user,
+                data=request.data,
+            )
         serializer.is_valid(raise_exception=True)
-        user, created = User.objects.get_or_create(
-            **serializer.validated_data,
+        serializer.save()
+        user = User.objects.get(
+            username=username,
+            email=email,
         )
-        email = serializer.validated_data.get('email')
         send_mail(
             subject='Запрошен код подтверждения для доступа к API YaMDb.',
             message=(
                 f'Ваш код подтверждения: {user.confirmation_code}'
             ),
-            from_email=PRODUCT_EMAIL,
+            from_email=settings.PRODUCT_EMAIL,
             recipient_list=(
                 email,
             ),
@@ -165,8 +180,8 @@ class APIToken(APIView):
             username=request.data.get('username')
         )
         if (
-            serializer.validated_data.get('confirmation_code')
-            == str(user.confirmation_code)
+                serializer.validated_data.get('confirmation_code')
+                == str(user.confirmation_code)
         ):
             token = {
                 'token': f'{AccessToken.for_user(user)}'

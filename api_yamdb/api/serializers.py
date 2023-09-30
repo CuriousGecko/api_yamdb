@@ -1,4 +1,3 @@
-import re
 from datetime import date
 
 from django.contrib.auth import get_user_model
@@ -40,7 +39,7 @@ class TitleSerializer(serializers.ModelSerializer):
         rating = Title.objects.filter(
             id=obj.id
         ).aggregate(
-          avg=Avg('reviews__score')
+            avg=Avg('reviews__score')
         )
         return rating.get('avg')
 
@@ -95,7 +94,7 @@ class ReviewSerializer(ModelSerializer):
             )
         return data
 
-      
+
 class CommentSerializer(ModelSerializer):
     class Meta:
         model = Comment
@@ -106,29 +105,17 @@ class CommentSerializer(ModelSerializer):
             'pub_date',
         )
 
-        
-class SignUpSerializer(serializers.Serializer):
-    username = serializers.CharField(
-        max_length=150,
-    )
-    email = serializers.EmailField(
-        max_length=254,
-    )
 
-    def validate_username(self, value):
-        """Проверит наличие недопустимых символов в имени пользователя."""
-        if re.search(r'^[\w.@+-]+\Z', value) is None:
-            raise serializers.ValidationError(
-                f'Имя пользователя {value} содержит недопустимые символы.',
-            )
-        if value == 'me':
-            raise serializers.ValidationError(
-                f'Недопустимое имя пользователя: me.'
-            )
-        return value
+class SignUpSerializer(ModelSerializer):
+    class Meta:
+        fields = (
+            'username',
+            'email',
+        )
+        model = User
 
     def validate(self, data):
-        """Проверит наличие учетной записи пользователя в БД."""
+        """Проверит схожесть аккаунта пользователя в БД и данных запроса."""
         username = data.get('username')
         email = data.get('email')
         if (
@@ -168,18 +155,6 @@ class ForAdminUsersSerializer(serializers.ModelSerializer):
             'bio',
         )
 
-    def validate_username(self, value):
-        """Проверит наличие недопустимых символов в имени пользователя."""
-        if re.search(r'^[\w.@+-]+\Z', value) is None:
-            raise serializers.ValidationError(
-                f'Имя пользователя {value} содержит недопустимые символы.',
-            )
-        if value == 'me':
-            raise serializers.ValidationError(
-                f'Недопустимое имя пользователя: me.'
-            )
-        return value
-
 
 class NotAdminUsersSerializer(ForAdminUsersSerializer):
-    role = CharField(read_only=True,)
+    role = CharField(read_only=True, )
