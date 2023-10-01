@@ -16,7 +16,8 @@ from api.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
 from api.serializers import (CategorySerializer, CommentSerializer,
                              ForAdminUsersSerializer, GenreSerializer,
                              NotAdminUsersSerializer, ReviewSerializer,
-                             SignUpSerializer, TitleSerializer,
+                             SignUpSerializer, TitleSerializerGet,
+                             TitleSerializerPost,
                              TokenSerializer)
 from django.conf import settings
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -42,7 +43,7 @@ class CategoryViewSet(BaseViewSet):
     """Получение списка категорий - доступно всем без токена.
     Создание категории, удаление категории - только администратору.
     """
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('id')
     serializer_class = CategorySerializer
     lookup_field = 'slug'
     permission_classes = (
@@ -55,7 +56,7 @@ class GenreViewSet(BaseViewSet):
     Создание и удаление жанра - только администратору.
     Удаление происходит по slug.
     """
-    queryset = Genre.objects.all()
+    queryset = Genre.objects.all().order_by('id')
     serializer_class = GenreSerializer
     # Это поле (оно же добавлено в serializers) позволяет сделать маршруты
     # автоматически по slug, по дефолту установлены ID. Т.е.
@@ -81,18 +82,17 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             'genre',
         ).select_related(
             'category',
-        )
+        ).order_by('id')
     )
-    serializer_class = TitleSerializer
-    filter_backends = (
-        DjangoFilterBackend,
-    )
-    filterset_fields = (
-        'category__slug',
-        'genre__slug',
-        'name',
-        'year',
-    )
+    # filter_backends = (
+    #     DjangoFilterBackend,
+    # )
+    # filterset_fields = (
+    #     'category__slug',
+    #     'genre__slug',
+    #     'name',
+    #     'year',
+    # )
     permission_classes = (
         IsAdminOrReadOnly,
     )
@@ -103,12 +103,15 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         'delete',
     )
 
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TitleSerializerGet
+        return TitleSerializerPost
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """Просмотр обзоров-все пользователи.
-    Добавление, изменение, удаление - только авторизованные.
-    Изменяет отзыв только его автор.
-    """
+    """Получение списка review, отдельного элемента"""
+
     serializer_class = ReviewSerializer
     permission_classes = (
         IsAdminModeratorAuthorOrReadOnly,
@@ -128,12 +131,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 "method": self.request.method
             }
         )
-        print(context['method'])
         return context
 
     def get_queryset(self):
-        return Review.objects.select_related('author').filter(
-            title=self.kwargs.get('title_id'))
+        return Review.objects.select_related('author', 'title').filter(
+            title=self.kwargs.get('title_id')).order_by('pub_date')
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -141,12 +143,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """Просмотр комментариев-все пользователи.
-    Добавление, изменение, удаление - только авторизованные.
-    Изменяет комментарий только его автор.
-    """
+    """Получение списка comment, отдельного элемента"""
 
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (
         IsAdminModeratorAuthorOrReadOnly,
@@ -159,8 +157,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     )
 
     def get_queryset(self):
-        return Comment.objects.select_related('author').filter(
-            review=self.kwargs.get('review_id'))
+        return Comment.objects.select_related('author', 'review').filter(
+            review=self.kwargs.get('review_id')).order_by('pub_date')
 
     def perform_create(self, serializer):
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
@@ -221,7 +219,7 @@ class APIToken(APIView):
             username=request.data.get('username')
         )
         if (
-                serializer.validated_data.get('confirmation_code')
+            serializer.validated_data.get('confirmation_code')
                 == str(user.confirmation_code)
         ):
             token = {
@@ -240,7 +238,7 @@ class APIToken(APIView):
 class UsersViewSet(ModelViewSet):
     """Вернет/обновит информацию о пользователях. Создаст/удалит юзера."""
 
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('id')
     serializer_class = ForAdminUsersSerializer
     permission_classes = (
         IsAdmin,

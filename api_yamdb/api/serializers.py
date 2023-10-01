@@ -21,24 +21,31 @@ class CategorySerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = (
+            'name',
+            'slug',
+        )
+        model = Genre
+        lookup_field = 'slug'
 
-    category = SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all(),
-    )
 
-    genre = SlugRelatedField(
-        slug_field='slug',
-        queryset=Genre.objects.all(),
-        many=True,
-    )
+class TitleSerializerGet(serializers.ModelSerializer):
+    category = CategorySerializer()
+    genre = GenreSerializer(read_only=True, many=True)
+    # genre = SlugRelatedField(
+    #     slug_field='slug',
+    #     queryset=Genre.objects.all(),
+    #     many=True,
+    # )
     rating = serializers.SerializerMethodField()
 
     class Meta:
         fields = (
             'id',
             'name',
+            'description',
             'year',
             'category',
             'genre',
@@ -55,22 +62,24 @@ class TitleSerializer(serializers.ModelSerializer):
         )
         return rating.get('avg')
 
+
+class TitleSerializerPost(TitleSerializerGet):
+    category = SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+    )
+    genre = SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True,
+    )
+
     def validate_year(self, value):
         """Проверяет, что год выпуска не будущее время."""
         year = date.today().year
         if value > year:
             raise serializers.ValidationError('Проверьте год выпуска!')
         return value
-
-
-class GenreSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = (
-            'name',
-            'slug',
-        )
-        model = Genre
-        lookup_field = 'slug'
 
 
 class ReviewSerializer(ModelSerializer):
