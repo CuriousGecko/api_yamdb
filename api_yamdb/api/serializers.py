@@ -37,10 +37,11 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
 
     def get_rating(self, obj):
+        """Считает среднюю оценку."""
         rating = Title.objects.filter(
             id=obj.id
         ).aggregate(
-          avg=Avg('reviews__score')
+            avg=Avg('reviews__score')
         )
         return rating.get('avg')
 
@@ -84,6 +85,7 @@ class ReviewSerializer(ModelSerializer):
         )
 
     def validate(self, data):
+        """Не позволяет автору прокомментировать одну и ту же запись."""
         author = data['author']
         title = data['title']
         existing_reviews = Review.objects.filter(
@@ -95,7 +97,7 @@ class ReviewSerializer(ModelSerializer):
             )
         return data
 
-      
+
 class CommentSerializer(ModelSerializer):
     class Meta:
         model = Comment
@@ -106,7 +108,7 @@ class CommentSerializer(ModelSerializer):
             'pub_date',
         )
 
-        
+
 class SignUpSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,

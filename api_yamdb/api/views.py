@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, viewsets
+from rest_framework import filters, mixins, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -78,9 +78,9 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
     queryset = (
         Title.objects.prefetch_related(
-          'genre',
+            'genre',
         ).select_related(
-          'category',
+            'category',
         )
     )
     serializer_class = TitleSerializer
@@ -102,28 +102,64 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         'patch',
         'delete',
     )
-    
-    
-class ReviewViewSet(viewsets.ModelViewSet):
-    """Тут мог быть ваш докстринг..."""
 
-    queryset = Review.objects.all()
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Просмотр обзоров-все пользователи.
+    Добавление, изменение, удаление - только авторизованные.
+    Изменяет отзыв только его автор.
+    """
     serializer_class = ReviewSerializer
-    permission_classes = (
-        IsAuthenticatedOrReadOnly,
-        IsAuthorOrReadOnly,
-    )
+    # permission_classes = (
+    #     IsAuthenticatedOrReadOnly,
+    #     IsAuthorOrReadOnly,
+    # )
+
+    def get_title(self):
+        title_id = self.kwargs.get('title_id')
+        return get_object_or_404(Title, pk=title_id)
+
+    def get_queryset(self):
+        title = self.get_title()
+        review_queryset = Review.objects.select_related(
+            'title').filter(pk=title.id).all()
+        return review_queryset
+
+    # def create(self, validated_data):
+    #     return Review(**validated_data)
+
+    def perform_create(self, serializer):
+        if serializer.is_valid():
+            serializer.save(author=self.request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """Тут мог быть ваш докстринг..."""
+    """Просмотр комментариев-все пользователи.
+    Добавление, изменение, удаление - только авторизованные.
+    Изменяет комментарий только его автор.
+    """
 
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
-    permission_classes = (
-        IsAuthenticatedOrReadOnly,
-        IsAuthorOrReadOnly,
-    )
+    # queryset = Comment.objects.all()
+    # serializer_class = CommentSerializer
+    # permission_classes = (
+    #     IsAuthenticatedOrReadOnly,
+    #     IsAuthorOrReadOnly,
+    # )
+
+    # def get_review(self):
+    #     review_id = self.kwargs.get('review_id')
+    #     return get_object_or_404(Review, pk=review_id)
+
+    # def get_queryset(self):
+    #     review = self.get_review()
+    #     comment_queryset = Comment.objects.select_related(
+    #         'review').filter(review=review).all()
+    #     return comment_queryset
+
+    # def perform_create(self, serializer):
+    #     review = self.get_review()
+    #     serializer.save(author=self.request.user, review=review)
 
 
 class APISignUp(APIView):

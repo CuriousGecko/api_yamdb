@@ -40,7 +40,8 @@ class Title(models.Model):
 class GenreTitle(models.Model):
     genre = models.ForeignKey(
         Genre, on_delete=models.SET_NULL, blank=True, null=True)
-    title = models.ForeignKey(Title, on_delete=models.SET_NULL, blank=True, null=True)
+    title = models.ForeignKey(
+        Title, on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
         return f'{self.genre} {self.title}'
@@ -86,32 +87,3 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
-
-
-# class AggregatedRating(models.Model):
-#     """
-#     Модель для хранения среднего рейтинга для записи.
-#     Связь с Title через поле rating.
-#     """
-#     title = models.ForeignKey(
-#         Title,
-#         on_delete=models.CASCADE,
-#         related_name='rating'
-#     )
-#     average_score = models.FloatField(default=0)
-
-#     def __str__(self):
-#         return str(self.average_score)
-
-#     # Этот метод должен вызываться во view-функции?
-#     @classmethod
-#     def count_average(cls, title):
-#         scores = Review.objects.filter(
-#             title_id=title).values_list('score', flat=True)
-#         if scores:
-#             average_score = sum(scores) / len(scores)
-#         else:
-#             average_score = 0
-#         title.rating = average_score
-#         title.save()
-#         return average_score
