@@ -6,7 +6,6 @@ from rest_framework import serializers
 from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ModelSerializer
-from rest_framework.validators import UniqueTogetherValidator
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -23,19 +22,18 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    
+
     category = SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),
     )
-    
+
     genre = SlugRelatedField(
         slug_field='slug',
         queryset=Genre.objects.all(),
         many=True,
     )
     rating = serializers.SerializerMethodField()
-    # category = Category()
 
     class Meta:
         fields = (
@@ -47,23 +45,6 @@ class TitleSerializer(serializers.ModelSerializer):
             'rating',
         )
         model = Title
-
-    
-    # class Category(serializers.Field):
-    #     # При чтении данных ничего не меняем - просто возвращаем как есть
-    #     def to_representation(self, value):
-    #         return CategorySerializer()
-    #     # При записи post
-    #     def to_internal_value(self, data):
-    #         # Доверяй, но проверяй
-    #         return SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
-
-    # def to_representation(self, instance):
-    #         data = super(TitleSerializer, self).to_representation(instance)
-    #         data['category'] = self.get_comments(instance)
-    #         return data
-    # def get_category(self, obj):
-    #     return Category.objects.get(slug=obj.category)
 
     def get_rating(self, obj):
         """Считает среднюю оценку."""
@@ -100,7 +81,7 @@ class ReviewSerializer(ModelSerializer):
     )
 
     title = serializers.SerializerMethodField()
-    
+
     def get_title(self, obj):
         return self.context['title']
 
@@ -135,7 +116,7 @@ class CommentSerializer(ModelSerializer):
         slug_field='username',
         default=serializers.CurrentUserDefault()
     )
-    
+
     class Meta:
         model = Comment
         fields = (

@@ -29,8 +29,14 @@ class IsAdminOrReadOnly(permissions.BasePermission):
         return request.method in permissions.SAFE_METHODS
 
 
-class IsAuthorOrReadOnly(permissions.BasePermission):
-    """Предоставляет доступ на редактирование только автору."""
+class IsAdminModeratorAuthorOrReadOnly(permissions.BasePermission):
+    """Доступ для админа, модератора, автора и безопасные методы для иных."""
+
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated
+            or request.method in permissions.SAFE_METHODS
+        )
 
     def has_object_permission(self, request, view, obj):
         return (

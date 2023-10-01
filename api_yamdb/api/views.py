@@ -1,17 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, viewsets, status
+from rest_framework import filters, mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
-from api.permissions import (IsAdmin, IsAuthorOrReadOnly, OwnerOnly,
+from api.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
+                             OwnerOnly,
                              IsAdminOrReadOnly)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              ForAdminUsersSerializer, GenreSerializer,
@@ -130,7 +130,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         )
         print(context['method'])
         return context
-    
+
     def get_queryset(self):
         return Review.objects.select_related('author').filter(
             title=self.kwargs.get('title_id'))
