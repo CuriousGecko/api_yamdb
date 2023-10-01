@@ -1,4 +1,3 @@
-import re
 from datetime import date
 
 from django.contrib.auth import get_user_model
@@ -7,23 +6,36 @@ from rest_framework import serializers
 from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ModelSerializer
-
+from rest_framework.validators import UniqueTogetherValidator
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = (
+            'name',
+            'slug',
+        )
+        model = Category
+        lookup_field = 'slug'
+
+
 class TitleSerializer(serializers.ModelSerializer):
+    
     category = SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),
     )
+    
     genre = SlugRelatedField(
         slug_field='slug',
         queryset=Genre.objects.all(),
         many=True,
     )
     rating = serializers.SerializerMethodField()
+    # category = Category()
 
     class Meta:
         fields = (
@@ -35,6 +47,23 @@ class TitleSerializer(serializers.ModelSerializer):
             'rating',
         )
         model = Title
+
+    
+    # class Category(serializers.Field):
+    #     # При чтении данных ничего не меняем - просто возвращаем как есть
+    #     def to_representation(self, value):
+    #         return CategorySerializer()
+    #     # При записи post
+    #     def to_internal_value(self, data):
+    #         # Доверяй, но проверяй
+    #         return SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
+
+    # def to_representation(self, instance):
+    #         data = super(TitleSerializer, self).to_representation(instance)
+    #         data['category'] = self.get_comments(instance)
+    #         return data
+    # def get_category(self, obj):
+    #     return Category.objects.get(slug=obj.category)
 
     def get_rating(self, obj):
         """Считает среднюю оценку."""
@@ -53,16 +82,6 @@ class TitleSerializer(serializers.ModelSerializer):
         return value
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = (
-            'name',
-            'slug',
-        )
-        model = Category
-        lookup_field = 'slug'
-
-
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = (
@@ -74,9 +93,21 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(ModelSerializer):
+    author = SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
+    )
+
+    title = serializers.SerializerMethodField()
+    
+    def get_title(self, obj):
+        return self.context['title']
+
     class Meta:
         model = Review
         fields = (
+            'id',
             'title',
             'text',
             'author',
@@ -85,20 +116,26 @@ class ReviewSerializer(ModelSerializer):
         )
 
     def validate(self, data):
-        """Не позволяет автору прокомментировать одну и ту же запись."""
-        author = data['author']
-        title = data['title']
-        existing_reviews = Review.objects.filter(
-            author=author, title=title
-        )
-        if existing_reviews.exists():
-            raise serializers.ValidationError(
-                'Вы уже оставляли заметку к этой записи!'
+        if self.context['method'] == 'POST':
+            author = self.context['request'].user
+            title = self.context['title']
+            existing_reviews = Review.objects.filter(
+                author=author, title=title
             )
+            if existing_reviews.exists():
+                raise serializers.ValidationError(
+                    'Вы уже оставляли заметку к этой записи!'
+                )
         return data
 
 
 class CommentSerializer(ModelSerializer):
+    author = SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
+    )
+    
     class Meta:
         model = Comment
         fields = (
@@ -109,28 +146,16 @@ class CommentSerializer(ModelSerializer):
         )
 
 
-class SignUpSerializer(serializers.Serializer):
-    username = serializers.CharField(
-        max_length=150,
-    )
-    email = serializers.EmailField(
-        max_length=254,
-    )
-
-    def validate_username(self, value):
-        """Проверит наличие недопустимых символов в имени пользователя."""
-        if re.search(r'^[\w.@+-]+\Z', value) is None:
-            raise serializers.ValidationError(
-                f'Имя пользователя {value} содержит недопустимые символы.',
-            )
-        if value == 'me':
-            raise serializers.ValidationError(
-                f'Недопустимое имя пользователя: me.'
-            )
-        return value
+class SignUpSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+        )
 
     def validate(self, data):
-        """Проверит наличие учетной записи пользователя в БД."""
+        """Проверит схожесть аккаунта пользователя в БД и данных запроса."""
         username = data.get('username')
         email = data.get('email')
         if (
@@ -170,18 +195,6 @@ class ForAdminUsersSerializer(serializers.ModelSerializer):
             'bio',
         )
 
-    def validate_username(self, value):
-        """Проверит наличие недопустимых символов в имени пользователя."""
-        if re.search(r'^[\w.@+-]+\Z', value) is None:
-            raise serializers.ValidationError(
-                f'Имя пользователя {value} содержит недопустимые символы.',
-            )
-        if value == 'me':
-            raise serializers.ValidationError(
-                f'Недопустимое имя пользователя: me.'
-            )
-        return value
-
 
 class NotAdminUsersSerializer(ForAdminUsersSerializer):
-    role = CharField(read_only=True,)
+    role = CharField(read_only=True, )

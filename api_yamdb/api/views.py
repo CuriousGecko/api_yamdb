@@ -18,7 +18,7 @@ from api.serializers import (CategorySerializer, CommentSerializer,
                              NotAdminUsersSerializer, ReviewSerializer,
                              SignUpSerializer, TitleSerializer,
                              TokenSerializer)
-from api_yamdb.settings import PRODUCT_EMAIL
+from django.conf import settings
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -110,28 +110,34 @@ class ReviewViewSet(viewsets.ModelViewSet):
     Изменяет отзыв только его автор.
     """
     serializer_class = ReviewSerializer
-    # permission_classes = (
-    #     IsAuthenticatedOrReadOnly,
-    #     IsAuthorOrReadOnly,
-    # )
+    permission_classes = (
+        IsAdminModeratorAuthorOrReadOnly,
+    )
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+    )
 
-    def get_title(self):
-        title_id = self.kwargs.get('title_id')
-        return get_object_or_404(Title, pk=title_id)
-
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update(
+            {
+                "title": self.kwargs['title_id'],
+                "method": self.request.method
+            }
+        )
+        print(context['method'])
+        return context
+    
     def get_queryset(self):
-        title = self.get_title()
-        review_queryset = Review.objects.select_related(
-            'title').filter(pk=title.id).all()
-        return review_queryset
-
-    # def create(self, validated_data):
-    #     return Review(**validated_data)
+        return Review.objects.select_related('author').filter(
+            title=self.kwargs.get('title_id'))
 
     def perform_create(self, serializer):
-        if serializer.is_valid():
-            serializer.save(author=self.request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -140,26 +146,25 @@ class CommentViewSet(viewsets.ModelViewSet):
     Изменяет комментарий только его автор.
     """
 
-    # queryset = Comment.objects.all()
-    # serializer_class = CommentSerializer
-    # permission_classes = (
-    #     IsAuthenticatedOrReadOnly,
-    #     IsAuthorOrReadOnly,
-    # )
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = (
+        IsAdminModeratorAuthorOrReadOnly,
+    )
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+    )
 
-    # def get_review(self):
-    #     review_id = self.kwargs.get('review_id')
-    #     return get_object_or_404(Review, pk=review_id)
+    def get_queryset(self):
+        return Comment.objects.select_related('author').filter(
+            review=self.kwargs.get('review_id'))
 
-    # def get_queryset(self):
-    #     review = self.get_review()
-    #     comment_queryset = Comment.objects.select_related(
-    #         'review').filter(review=review).all()
-    #     return comment_queryset
-
-    # def perform_create(self, serializer):
-    #     review = self.get_review()
-    #     serializer.save(author=self.request.user, review=review)
+    def perform_create(self, serializer):
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        serializer.save(author=self.request.user, review=review)
 
 
 class APISignUp(APIView):
@@ -169,17 +174,29 @@ class APISignUp(APIView):
         serializer = SignUpSerializer(
             data=request.data,
         )
-        serializer.is_valid(raise_exception=True)
-        user, created = User.objects.get_or_create(
-            **serializer.validated_data,
+        username = request.data.get('username')
+        email = request.data.get('email')
+        if not User.objects.filter(
+            username=username,
+            email=email,
+        ).exists():
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        user = User.objects.get(
+            username=username,
+            email=email,
         )
-        email = serializer.validated_data.get('email')
+        serializer = SignUpSerializer(
+            user,
+            data=request.data,
+        )
+        serializer.is_valid(raise_exception=True)
         send_mail(
             subject='Запрошен код подтверждения для доступа к API YaMDb.',
             message=(
                 f'Ваш код подтверждения: {user.confirmation_code}'
             ),
-            from_email=PRODUCT_EMAIL,
+            from_email=settings.PRODUCT_EMAIL,
             recipient_list=(
                 email,
             ),
@@ -204,8 +221,8 @@ class APIToken(APIView):
             username=request.data.get('username')
         )
         if (
-            serializer.validated_data.get('confirmation_code')
-            == str(user.confirmation_code)
+                serializer.validated_data.get('confirmation_code')
+                == str(user.confirmation_code)
         ):
             token = {
                 'token': f'{AccessToken.for_user(user)}'

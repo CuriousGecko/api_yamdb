@@ -57,8 +57,13 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews',
     )
-    text = models.TextField('Текст обзора')
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField(
+        'Текст обзора',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
     score = models.IntegerField(
         validators=[
             MaxValueValidator(10),
@@ -66,6 +71,14 @@ class Review(models.Model):
         ]
     )
     pub_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_title_owner'
+            )
+        ]
 
     def __str__(self):
         return self.text
