@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
-from api.filters import FilterTitle
+from api.filters import TitleFilter
 from api.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
                              IsAdminOrReadOnly, OwnerOnly)
 from api.serializers import (CategorySerializer, CommentSerializer,
@@ -82,7 +82,7 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     filter_backends = (
         DjangoFilterBackend,
     )
-    filterset_class = FilterTitle
+    filterset_class = TitleFilter
     permission_classes = (
         IsAdminOrReadOnly,
     )
