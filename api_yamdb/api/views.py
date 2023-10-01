@@ -100,7 +100,7 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """Получение списка review, отдельного элемента"""
+    """Получение списка review, отдельного элемента."""
 
     serializer_class = ReviewSerializer
     permission_classes = (
@@ -133,7 +133,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """Получение списка comment, отдельного элемента"""
+    """Получение списка comment, отдельного элемента."""
 
     serializer_class = CommentSerializer
     permission_classes = (
