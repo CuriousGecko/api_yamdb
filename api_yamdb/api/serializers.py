@@ -1,5 +1,3 @@
-from datetime import date
-
 from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from rest_framework import serializers
@@ -34,11 +32,6 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializerGet(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(read_only=True, many=True)
-    # genre = SlugRelatedField(
-    #     slug_field='slug',
-    #     queryset=Genre.objects.all(),
-    #     many=True,
-    # )
     rating = serializers.SerializerMethodField()
 
     class Meta:
@@ -73,13 +66,6 @@ class TitleSerializerPost(TitleSerializerGet):
         queryset=Genre.objects.all(),
         many=True,
     )
-
-    def validate_year(self, value):
-        """Проверяет, что год выпуска не будущее время."""
-        year = date.today().year
-        if value > year:
-            raise serializers.ValidationError('Проверьте год выпуска!')
-        return value
 
 
 class ReviewSerializer(ModelSerializer):

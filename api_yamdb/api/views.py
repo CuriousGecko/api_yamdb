@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
@@ -10,6 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
+from api.filters import FilterTitle
 from api.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
                              OwnerOnly,
                              IsAdminOrReadOnly)
@@ -17,9 +19,7 @@ from api.serializers import (CategorySerializer, CommentSerializer,
                              ForAdminUsersSerializer, GenreSerializer,
                              NotAdminUsersSerializer, ReviewSerializer,
                              SignUpSerializer, TitleSerializerGet,
-                             TitleSerializerPost,
-                             TokenSerializer)
-from django.conf import settings
+                             TitleSerializerPost, TokenSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -58,10 +58,6 @@ class GenreViewSet(BaseViewSet):
     """
     queryset = Genre.objects.all().order_by('id')
     serializer_class = GenreSerializer
-    # Это поле (оно же добавлено в serializers) позволяет сделать маршруты
-    # автоматически по slug, по дефолту установлены ID. Т.е.
-    # раньше, чтобы получить объект - http://127.0.0.1:8000/api/v1/genre/1/
-    # теперь http://127.0.0.1:8000/api/v1/genre/skazka/
     lookup_field = 'slug'
     permission_classes = (
         IsAdminOrReadOnly,
@@ -84,15 +80,10 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             'category',
         ).order_by('id')
     )
-    # filter_backends = (
-    #     DjangoFilterBackend,
-    # )
-    # filterset_fields = (
-    #     'category__slug',
-    #     'genre__slug',
-    #     'name',
-    #     'year',
-    # )
+    filter_backends = (
+        DjangoFilterBackend,
+    )
+    filterset_class = FilterTitle
     permission_classes = (
         IsAdminOrReadOnly,
     )

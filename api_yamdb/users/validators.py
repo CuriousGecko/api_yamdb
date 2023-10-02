@@ -11,5 +11,5 @@ def validate_username(value):
         )
     if value == 'me':
         raise serializers.ValidationError(
-            f'Недопустимое имя пользователя: me.'
+            'Недопустимое имя пользователя: me.'
         )
