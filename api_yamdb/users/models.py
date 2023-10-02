@@ -14,6 +14,7 @@ class CustomUser(AbstractUser):
         ADMIN = 'admin'
 
     role = CharField(
+        'Роль',
         max_length=255,
         default=Roles.USER,
         choices=Roles.choices,

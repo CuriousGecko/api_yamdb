@@ -29,7 +29,7 @@ class BaseViewSet(
     mixins.ListModelMixin,
     mixins.DestroyModelMixin,
     mixins.CreateModelMixin,
-    viewsets.GenericViewSet
+    viewsets.GenericViewSet,
 ):
     filter_backends = (
         filters.SearchFilter,

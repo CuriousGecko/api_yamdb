@@ -5,19 +5,31 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    '''
+    """
     Команда для создания объектов моделей из файлов csv.
-    Будет выглядить так:
+    Будет выглядеть так:
     python manage.py load_data_from_csv --file_name comments.csv
     --model_name Comment --app_name reviews.
-    '''
+    """
 
     help = 'Создает объект модели в базу данных из файла .csv'
 
     def add_arguments(self, parser):
-        parser.add_argument('--file_name', type=str, help="имя файла")
-        parser.add_argument('--model_name', type=str, help="имя модели")
-        parser.add_argument('--app_name', type=str, help="приложение модели")
+        parser.add_argument(
+            '--file_name',
+            type=str,
+            help='имя файла',
+        )
+        parser.add_argument(
+            '--model_name',
+            type=str,
+            help='имя модели',
+        )
+        parser.add_argument(
+            '--app_name',
+            type=str,
+            help='приложение модели',
+        )
 
     def handle(self, *args, **options):
         file_path = 'static/data/' + options['file_name']
