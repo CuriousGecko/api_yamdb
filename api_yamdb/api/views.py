@@ -13,7 +13,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from api.filters import TitleFilter
 from api.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
-                             IsAdminOrReadOnly, OwnerOnly)
+                             OwnerOnly,
+                             IsAdminOrReadOnly)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              ForAdminUsersSerializer, GenreSerializer,
                              NotAdminUsersSerializer, ReviewSerializer,
@@ -39,7 +40,8 @@ class BaseViewSet(
 
 
 class CategoryViewSet(BaseViewSet):
-    """Получение списка категорий - доступно всем без токена.
+    """
+    Получение списка категорий - доступно всем без токена.
     Создание категории, удаление категории - только администратору.
     """
     queryset = Category.objects.all().order_by('id')
@@ -51,7 +53,8 @@ class CategoryViewSet(BaseViewSet):
 
 
 class GenreViewSet(BaseViewSet):
-    """Получение списка жанров - доступно всем без токена.
+    """
+    Получение списка жанров - доступно всем без токена.
     Создание и удаление жанра - только администратору.
     Удаление происходит по slug.
     """
@@ -65,7 +68,8 @@ class GenreViewSet(BaseViewSet):
 
 class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                    BaseViewSet):
-    """Получение списка произведений - доступно всем без токена.
+    """
+    Получение списка произведений - доступно всем без токена.
     Фильтрация по slug, году, названию, году.
     Создание, частичное изменение, удаление - только администратору.
     Нельзя добавлять произведения, которые еще не вышли.
@@ -295,7 +299,6 @@ class UsersViewSet(ModelViewSet):
             )
             return Response(
                 serializer.data,
-                status=HTTP_200_OK,
             )
         if request.method == 'PATCH':
             serializer = NotAdminUsersSerializer(

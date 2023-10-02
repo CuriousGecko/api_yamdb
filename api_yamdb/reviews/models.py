@@ -8,42 +8,37 @@ User = get_user_model()
 
 
 class Category(models.Model):
-    name = models.CharField(
-        max_length=256,
-    )
-    slug = models.SlugField(
-        max_length=50,
-        unique=True,
-    )
+    """
+    Модель для хранения категорий.
+    """
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
 
 
 class Genre(models.Model):
-    name = models.CharField(
-        max_length=256,
-    )
-    slug = models.SlugField(
-        max_length=50,
-        unique=True,
-    )
+    """
+    Модель для хранения жанров.
+    """
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
 
 
 class Title(models.Model):
-    name = models.CharField(
-        max_length=256,
-    )
-    year = models.IntegerField(
-        validators=[validate_year],
-    )
-    description = models.TextField(
-        max_length=256,
-        blank=True,
-    )
+    """
+    Модель для хранения записей.
+    Связь с Category через поле titles.
+    Связь с Genre через поле titles_of genre
+    промежуточной таблицы GenreTitle.
+    """
+    name = models.CharField(max_length=256)
+    year = models.IntegerField(validators=[validate_year])
+    description = models.TextField(max_length=256, blank=True)
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -62,18 +57,14 @@ class Title(models.Model):
 
 
 class GenreTitle(models.Model):
+    """
+    Промежуточная таблица для связи Genre и Title.
+    """
     genre = models.ForeignKey(
-        Genre,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
+        Genre, on_delete=models.SET_NULL, blank=True, null=True)
     title = models.ForeignKey(
-        Title,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
+        Title, on_delete=models.SET_NULL, blank=True, null=True)
+
 
     def __str__(self):
         return f'{self.genre} {self.title}'
@@ -105,6 +96,10 @@ class Review(models.Model):
     pub_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """
+        Ограничение уникальности для соблюдения правила
+        "один пользователь - одна заметка к записи".
+        """
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],

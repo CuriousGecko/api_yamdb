@@ -4,7 +4,6 @@ from rest_framework import serializers
 from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ModelSerializer
-
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -51,11 +50,9 @@ class TitleSerializerGet(serializers.ModelSerializer):
         model = Title
 
     def get_rating(self, obj):
+        """Считает среднюю оценку."""
         rating = Title.objects.filter(
-            id=obj.id
-        ).aggregate(
-            avg=Avg('reviews__score')
-        )
+            id=obj.id).aggregate(avg=Avg('reviews__score'))
         return rating.get('avg')
 
 
@@ -95,6 +92,10 @@ class ReviewSerializer(ModelSerializer):
         )
 
     def validate(self, data):
+        """
+        Ограничение уникальности для соблюдения правила
+        "один пользователь - одна заметка к записи".
+        """
         if self.context['method'] == 'POST':
             author = self.context['request'].user
             title = self.context['title']
