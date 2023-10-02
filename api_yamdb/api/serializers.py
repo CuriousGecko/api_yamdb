@@ -32,7 +32,10 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializerGet(serializers.ModelSerializer):
     category = CategorySerializer()
-    genre = GenreSerializer(read_only=True, many=True)
+    genre = GenreSerializer(
+        read_only=True,
+        many=True,
+    )
     rating = serializers.SerializerMethodField()
 
     class Meta:
@@ -76,7 +79,7 @@ class ReviewSerializer(ModelSerializer):
     )
 
     title = serializers.SerializerMethodField()
-    
+
     def get_title(self, obj):
         return self.context['title']
 
@@ -96,7 +99,8 @@ class ReviewSerializer(ModelSerializer):
             author = self.context['request'].user
             title = self.context['title']
             existing_reviews = Review.objects.filter(
-                author=author, title=title
+                author=author,
+                title=title,
             )
             if existing_reviews.exists():
                 raise serializers.ValidationError(
@@ -111,7 +115,7 @@ class CommentSerializer(ModelSerializer):
         slug_field='username',
         default=serializers.CurrentUserDefault()
     )
-    
+
     class Meta:
         model = Comment
         fields = (
@@ -173,4 +177,6 @@ class ForAdminUsersSerializer(serializers.ModelSerializer):
 
 
 class NotAdminUsersSerializer(ForAdminUsersSerializer):
-    role = CharField(read_only=True, )
+    role = CharField(
+        read_only=True,
+    )

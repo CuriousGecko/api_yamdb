@@ -28,7 +28,7 @@ class BaseViewSet(
     mixins.ListModelMixin,
     mixins.DestroyModelMixin,
     mixins.CreateModelMixin,
-    viewsets.GenericViewSet
+    viewsets.GenericViewSet,
 ):
     filter_backends = (
         filters.SearchFilter,
@@ -124,7 +124,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             }
         )
         return context
-    
+
     def get_queryset(self):
         return Review.objects.select_related(
             'author',
@@ -309,4 +309,3 @@ class UsersViewSet(ModelViewSet):
                 serializer.data,
                 status=HTTP_200_OK,
             )
-        
