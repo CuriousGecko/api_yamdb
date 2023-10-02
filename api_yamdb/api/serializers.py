@@ -49,10 +49,7 @@ class TitleSerializerGet(serializers.ModelSerializer):
     def get_rating(self, obj):
         """Считает среднюю оценку."""
         rating = Title.objects.filter(
-            id=obj.id
-        ).aggregate(
-            avg=Avg('reviews__score')
-        )
+            id=obj.id).aggregate(avg=Avg('reviews__score'))
         return rating.get('avg')
 
 
@@ -92,6 +89,10 @@ class ReviewSerializer(ModelSerializer):
         )
 
     def validate(self, data):
+        """
+        Ограничение уникальности для соблюдения правила
+        "один пользователь - одна заметка к записи".
+        """
         if self.context['method'] == 'POST':
             author = self.context['request'].user
             title = self.context['title']

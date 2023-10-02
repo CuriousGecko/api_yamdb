@@ -11,7 +11,7 @@ class Command(BaseCommand):
     python manage.py load_data_from_csv --file_name comments.csv
     --model_name Comment --app_name reviews.
     '''
-    
+
     help = 'Создает объект модели в базу данных из файла .csv'
 
     def add_arguments(self, parser):
@@ -21,16 +21,20 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         file_path = 'static/data/' + options['file_name']
-        # Получаем модель
+        # Получаем модель.
         model = apps.get_model(options['app_name'], options['model_name'])
-        # C помощью функции open читаем файл (указываем путь) и режим (r - открыт для чтения)
-        # возвращает объект чтения который будет перебирать строки в данном файле - csv_file 
-        # encoding - чтобы было без каракуль
+        # C помощью функции open читаем файл (указываем путь)
+        # и режим (r - открыт для чтения)
+        # возвращает объект чтения, который будет
+        # перебирать строки в данном файле - csv_file
+        # encoding - чтобы было без каракуль.
         with open(file_path, 'r', encoding='utf-8') as csv_file:
             reader = csv.reader(csv_file, delimiter=',')
-            # метод next - переход на следующую строку header = ['id', 'name', 'slug'])
+            # метод next - переход на следующую строку
+            # header = ['id', 'name', 'slug'])
             header = next(reader)
-            # Если в csv и models разные названия полей, то можно в ручную сделать так.
+            # Если в csv и models разные названия полей,
+            # то можно в ручную сделать так.
             # А можно просто исправить названия в файлах csv.
             # if options['model_name'] == 'Title':
             #     for row in reader:
@@ -46,6 +50,7 @@ class Command(BaseCommand):
                 # Функция  zip объединяет 2 массива (заголовк и row(строчка))
                 # ['id', 'name', 'slug']) и ['3', 'Р¤РёР»СЊРј', 'mov']
                 object_dict = {key: value for key, value in zip(header, row)}
-                # Получим словарь {'id': '3', 'name': 'Р¤РёР»СЊРј', 'slug': 'mov'},
-                # Передадим его в модель  
+                # Получим словарь
+                # {'id': '3', 'name': 'Р¤РёР»СЊРј', 'slug': 'mov'},
+                # Передадим его в модель.
                 model.objects.create(**object_dict)

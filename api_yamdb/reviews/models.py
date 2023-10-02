@@ -8,6 +8,9 @@ User = get_user_model()
 
 
 class Category(models.Model):
+    """
+    Модель для хранения категорий.
+    """
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -16,6 +19,9 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
+    """
+    Модель для хранения жанров.
+    """
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -24,6 +30,12 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
+    """
+    Модель для хранения записей.
+    Связь с Category через поле titles.
+    Связь с Genre через поле titles_of genre
+    промежуточной таблицы GenreTitle.
+    """
     name = models.CharField(max_length=256)
     year = models.IntegerField(validators=[validate_year])
     description = models.TextField(max_length=256, blank=True)
@@ -40,6 +52,9 @@ class Title(models.Model):
 
 
 class GenreTitle(models.Model):
+    """
+    Промежуточная таблица для связи Genre и Title.
+    """
     genre = models.ForeignKey(
         Genre, on_delete=models.SET_NULL, blank=True, null=True)
     title = models.ForeignKey(
@@ -75,6 +90,10 @@ class Review(models.Model):
     pub_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """
+        Ограничение уникальности для соблюдения правила
+        "один пользователь - одна заметка к записи".
+        """
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
