@@ -75,7 +75,6 @@ class ReviewSerializer(ModelSerializer):
         slug_field='username',
         default=serializers.CurrentUserDefault()
     )
-
     title = serializers.SerializerMethodField()
 
     def get_title(self, obj):
