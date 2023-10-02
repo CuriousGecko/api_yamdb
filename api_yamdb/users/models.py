@@ -8,6 +8,8 @@ from users.validators import validate_username
 
 
 class CustomUser(AbstractUser):
+    """Измененная модель пользователя."""
+
     class Roles(TextChoices):
         USER = 'user'
         MODERATOR = 'moderator'

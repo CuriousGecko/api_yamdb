@@ -33,36 +33,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         file_path = 'static/data/' + options['file_name']
-        # Получаем модель.
-        model = apps.get_model(options['app_name'], options['model_name'])
-        # C помощью функции open читаем файл (указываем путь)
-        # и режим (r - открыт для чтения)
-        # возвращает объект чтения, который будет
-        # перебирать строки в данном файле - csv_file
-        # encoding - чтобы было без каракуль.
+        model = apps.get_model(
+            options['app_name'],
+            options['model_name'],
+        )
         with open(file_path, 'r', encoding='utf-8') as csv_file:
-            reader = csv.reader(csv_file, delimiter=',')
-            # метод next - переход на следующую строку
-            # header = ['id', 'name', 'slug'])
+            reader = csv.reader(
+                csv_file,
+                delimiter=','
+            )
             header = next(reader)
-            # Если в csv и models разные названия полей,
-            # то можно в ручную сделать так.
-            # А можно просто исправить названия в файлах csv.
-            # if options['model_name'] == 'Title':
-            #     for row in reader:
-            #         object_dict = {
-            #             'id': row[0],
-            #             'name': row[1],
-            #             'year': row[2],
-            #             'category_id': row[3]
-            #         }
-            #         model.objects.create(**object_dict)
-            # else:
             for row in reader:
-                # Функция  zip объединяет 2 массива (заголовк и row(строчка))
-                # ['id', 'name', 'slug']) и ['3', 'Р¤РёР»СЊРј', 'mov']
-                object_dict = {key: value for key, value in zip(header, row)}
-                # Получим словарь
-                # {'id': '3', 'name': 'Р¤РёР»СЊРј', 'slug': 'mov'},
-                # Передадим его в модель.
+                object_dict = {
+                    key: value for key, value in zip(header, row)
+                }
                 model.objects.create(**object_dict)

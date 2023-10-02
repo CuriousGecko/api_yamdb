@@ -13,8 +13,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from api.filters import TitleFilter
 from api.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
-                             OwnerOnly,
-                             IsAdminOrReadOnly)
+                             IsAdminOrReadOnly, OwnerOnly)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              ForAdminUsersSerializer, GenreSerializer,
                              NotAdminUsersSerializer, ReviewSerializer,
@@ -44,6 +43,7 @@ class CategoryViewSet(BaseViewSet):
     Получение списка категорий - доступно всем без токена.
     Создание категории, удаление категории - только администратору.
     """
+
     queryset = Category.objects.all().order_by('id')
     serializer_class = CategorySerializer
     lookup_field = 'slug'
@@ -58,6 +58,7 @@ class GenreViewSet(BaseViewSet):
     Создание и удаление жанра - только администратору.
     Удаление происходит по slug.
     """
+
     queryset = Genre.objects.all().order_by('id')
     serializer_class = GenreSerializer
     lookup_field = 'slug'
@@ -123,8 +124,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context.update(
             {
-                "title": self.kwargs['title_id'],
-                "method": self.request.method,
+                'title': self.kwargs['title_id'],
+                'method': self.request.method,
             }
         )
         return context

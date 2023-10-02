@@ -8,9 +8,8 @@ User = get_user_model()
 
 
 class Category(models.Model):
-    """
-    Модель для хранения категорий.
-    """
+    """Модель для хранения категорий."""
+
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -19,9 +18,8 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    """
-    Модель для хранения жанров.
-    """
+    """Модель для хранения жанров."""
+
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -36,6 +34,7 @@ class Title(models.Model):
     Связь с Genre через поле titles_of genre
     промежуточной таблицы GenreTitle.
     """
+
     name = models.CharField(max_length=256)
     year = models.IntegerField(validators=[validate_year])
     description = models.TextField(max_length=256, blank=True)
@@ -57,14 +56,12 @@ class Title(models.Model):
 
 
 class GenreTitle(models.Model):
-    """
-    Промежуточная таблица для связи Genre и Title.
-    """
+    """Промежуточная таблица для связи Genre и Title."""
+
     genre = models.ForeignKey(
         Genre, on_delete=models.SET_NULL, blank=True, null=True)
     title = models.ForeignKey(
         Title, on_delete=models.SET_NULL, blank=True, null=True)
-
 
     def __str__(self):
         return f'{self.genre} {self.title}'
@@ -75,6 +72,7 @@ class Review(models.Model):
     Модель для хранения обзоров на записи.
     Связь с Title через поле reviews.
     """
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -100,6 +98,7 @@ class Review(models.Model):
         Ограничение уникальности для соблюдения правила
         "один пользователь - одна заметка к записи".
         """
+
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
@@ -116,6 +115,7 @@ class Comment(models.Model):
     Модель для хранения комментариев к обзорам.
     Связь с Review через поле comments.
     """
+
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
