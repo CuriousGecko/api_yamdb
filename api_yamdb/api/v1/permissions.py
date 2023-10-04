@@ -3,6 +3,7 @@ from rest_framework import permissions
 
 class IsAdmin(permissions.BasePermission):
     """Предоставляет доступ только администратору/суперпользователю."""
+    # Там где используется - да, только для админа.
 
     def has_permission(self, request, view):
         return (
