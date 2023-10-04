@@ -15,10 +15,10 @@ from api.v1.filters import TitleFilter
 from api.v1.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
                                 IsAdminOrReadOnly, OwnerOnly)
 from api.v1.serializers import (CategorySerializer, CommentSerializer,
-                                ForAdminUsersSerializer, GenreSerializer,
-                                NotAdminUsersSerializer, ReviewSerializer,
+                                GenreSerializer, ReviewSerializer,
                                 SignUpSerializer, TitleSerializerGet,
-                                TitleSerializerPost, TokenSerializer)
+                                TitleSerializerPost, TokenSerializer,
+                                UserSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -193,8 +193,8 @@ class APISignUp(APIView):
         serializer = SignUpSerializer(
             data=request.data,
         )
-        username = request.data.get('username')
-        email = request.data.get('email')
+        username = serializer.initial_data.get('username')
+        email = serializer.initial_data.get('email')
         if not User.objects.filter(
             username=username,
             email=email,
@@ -260,7 +260,7 @@ class UsersViewSet(ModelViewSet):
     """Вернет/обновит информацию о пользователях. Создаст/удалит юзера."""
 
     queryset = User.objects.all().order_by('id')
-    serializer_class = ForAdminUsersSerializer
+    serializer_class = UserSerializer
     permission_classes = (
         IsAdmin,
     )
@@ -295,20 +295,22 @@ class UsersViewSet(ModelViewSet):
             username=request.user,
         )
         if request.method == 'GET':
-            serializer = NotAdminUsersSerializer(
+            serializer = UserSerializer(
                 user,
             )
             return Response(
                 serializer.data,
             )
         if request.method == 'PATCH':
-            serializer = NotAdminUsersSerializer(
+            serializer = UserSerializer(
                 user,
                 data=request.data,
                 partial=True,
             )
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            serializer.save(
+                role=request.user.role,
+            )
             return Response(
                 serializer.data,
                 status=HTTP_200_OK,
