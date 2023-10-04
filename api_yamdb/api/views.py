@@ -44,9 +44,9 @@ class CategoryViewSet(BaseViewSet):
     Создание категории, удаление категории - только администратору.
     """
 
-    queryset = Category.objects.all().order_by('id')
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    lookup_field = 'slug'
+    lookup_url_kwargs = 'slug'
     permission_classes = (
         IsAdminOrReadOnly,
     )
@@ -59,7 +59,7 @@ class GenreViewSet(BaseViewSet):
     Удаление происходит по slug.
     """
 
-    queryset = Genre.objects.all().order_by('id')
+    queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     lookup_field = 'slug'
     permission_classes = (

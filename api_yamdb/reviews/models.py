@@ -36,7 +36,7 @@ class Title(models.Model):
     """
 
     name = models.CharField(max_length=256)
-    year = models.IntegerField(validators=[validate_year])
+    year = models.PositiveSmallIntegerField(validators=[validate_year])
     description = models.TextField(max_length=256, blank=True)
     category = models.ForeignKey(
         Category,
@@ -47,24 +47,11 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        through='GenreTitle',
         related_name='titles_of_genre',
     )
 
     def __str__(self):
         return self.name
-
-
-class GenreTitle(models.Model):
-    """Промежуточная таблица для связи Genre и Title."""
-
-    genre = models.ForeignKey(
-        Genre, on_delete=models.SET_NULL, blank=True, null=True)
-    title = models.ForeignKey(
-        Title, on_delete=models.SET_NULL, blank=True, null=True)
-
-    def __str__(self):
-        return f'{self.genre} {self.title}'
 
 
 class Review(models.Model):

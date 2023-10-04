@@ -7,9 +7,9 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     """
     Команда для создания объектов моделей из файлов csv.
-    Будет выглядеть так:
-    python manage.py load_data_from_csv --file_name comments.csv
-    --model_name Comment --app_name reviews.
+
+    # Будет выглядеть так:
+    # python manage.py load_data_from_csv --file_name comments.csv --model_name Comment --app_name reviews
     """
 
     help = 'Создает объект модели в базу данных из файла .csv'
@@ -43,8 +43,15 @@ class Command(BaseCommand):
                 delimiter=','
             )
             header = next(reader)
+            objects_of_model = []
             for row in reader:
                 object_dict = {
                     key: value for key, value in zip(header, row)
                 }
-                model.objects.create(**object_dict)
+                objects_of_model.append(model(**object_dict))
+            model.objects.bulk_create(objects_of_model)
+            
+            # model.objects.bulk_create([
+            #     model(**{key: value for key, value in zip(header, row)})
+            #     for row in reader
+            # ])
