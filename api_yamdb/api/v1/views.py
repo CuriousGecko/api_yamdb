@@ -13,12 +13,12 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from api.v1.filters import TitleFilter
 from api.v1.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
-                             IsAdminOrReadOnly, OwnerOnly)
+                                IsAdminOrReadOnly, OwnerOnly)
 from api.v1.serializers import (CategorySerializer, CommentSerializer,
-                             ForAdminUsersSerializer, GenreSerializer,
-                             NotAdminUsersSerializer, ReviewSerializer,
-                             SignUpSerializer, TitleSerializerGet,
-                             TitleSerializerPost, TokenSerializer)
+                                ForAdminUsersSerializer, GenreSerializer,
+                                NotAdminUsersSerializer, ReviewSerializer,
+                                SignUpSerializer, TitleSerializerGet,
+                                TitleSerializerPost, TokenSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
