@@ -11,14 +11,14 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
-from api.filters import TitleFilter
-from api.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
-                             IsAdminOrReadOnly, OwnerOnly)
-from api.serializers import (CategorySerializer, CommentSerializer,
-                             ForAdminUsersSerializer, GenreSerializer,
-                             NotAdminUsersSerializer, ReviewSerializer,
-                             SignUpSerializer, TitleSerializerGet,
-                             TitleSerializerPost, TokenSerializer)
+from api.v1.filters import TitleFilter
+from api.v1.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
+                                IsAdminOrReadOnly, OwnerOnly)
+from api.v1.serializers import (CategorySerializer, CommentSerializer,
+                                ForAdminUsersSerializer, GenreSerializer,
+                                NotAdminUsersSerializer, ReviewSerializer,
+                                SignUpSerializer, TitleSerializerGet,
+                                TitleSerializerPost, TokenSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
