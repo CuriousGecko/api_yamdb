@@ -2,7 +2,8 @@ from django.urls import include, path
 from rest_framework import routers
 
 from api.v1.views import (APISignUp, APIToken, CategoryViewSet, CommentViewSet,
-                       GenreViewSet, ReviewViewSet, TitleViewSet, UsersViewSet)
+                          GenreViewSet, ReviewViewSet, TitleViewSet,
+                          UsersViewSet)
 
 router_v1 = routers.DefaultRouter()
 router_v1.register(

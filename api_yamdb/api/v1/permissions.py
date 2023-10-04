@@ -2,12 +2,13 @@ from rest_framework import permissions
 
 
 class IsAdmin(permissions.BasePermission):
-    """Предоставляет доступ только администратору."""
+    """Предоставляет доступ только администратору/суперпользователю."""
 
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            return request.user.role == 'admin' or request.user.is_superuser
-        return False
+        return (
+            request.user.is_authenticated
+            and request.user.is_admin_or_superuser
+        )
 
 
 class OwnerOnly(permissions.BasePermission):
@@ -24,9 +25,11 @@ class IsAdminOrReadOnly(permissions.BasePermission):
     """Полный доступ администратору и безопасные методы для остальных."""
 
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            return request.user.role == 'admin' or request.user.is_superuser
-        return request.method in permissions.SAFE_METHODS
+        return (
+            request.user.is_authenticated
+            and request.user.is_admin_or_superuser
+            or request.method in permissions.SAFE_METHODS
+        )
 
 
 class IsAdminModeratorAuthorOrReadOnly(permissions.BasePermission):
@@ -41,8 +44,8 @@ class IsAdminModeratorAuthorOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return (
             request.method in permissions.SAFE_METHODS
-            or request.user.role == 'admin'
-            or request.user.role == 'moderator'
+            or request.user.is_admin_or_superuser
+            or request.user.is_moderator
             or request.user == obj.author
             or request.user.is_superuser
         )
