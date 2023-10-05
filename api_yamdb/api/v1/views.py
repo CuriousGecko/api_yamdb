@@ -215,16 +215,15 @@ class APISignUp(APIView):
                     username=username,
                     email=email,
                 )
-                confirmation_code = default_token_generator.make_token(user)
                 self.send_confirmation_code(
-                    confirmation_code,
+                    user,
                     email,
                 )
                 return Response(
                     serializer.data,
                     status=HTTP_200_OK,
                 )
-            serializer.is_valid(raise_exception=True)
+            raise ValidationError(serializer.errors)
         serializer.save()
         username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
@@ -232,9 +231,8 @@ class APISignUp(APIView):
             username=username,
             email=email,
         )
-        confirmation_code = default_token_generator.make_token(user)
         self.send_confirmation_code(
-            confirmation_code,
+            user,
             email,
         )
         return Response(
@@ -242,7 +240,8 @@ class APISignUp(APIView):
             status=HTTP_200_OK,
         )
 
-    def send_confirmation_code(self, confirmation_code, email):
+    def send_confirmation_code(self, user, email):
+        confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Запрошен код подтверждения для доступа к API YaMDb.',
             message=(
