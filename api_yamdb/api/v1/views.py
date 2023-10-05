@@ -6,6 +6,7 @@ from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
@@ -41,21 +42,22 @@ class BaseViewSet(
 
 
 class PatchModelMixin:
+
     def perform_patch(self, serializer, **kwargs):
         serializer.save()
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(instance,
-                                         data=request.data,
-                                         partial=True)
+        serializer = self.get_serializer(
+            instance,
+            data=request.data,
+            partial=True,
+        )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        # queryset = self.filter_queryset(self.get_queryset())
-        # if queryset._prefetch_related_lookups:
-        #     instance._prefetched_objects_cashe = {}
-        #     prefetch_related_objects([instance], *queryset._prefetch_related_lookups)
-        return Response(serializer.data)
+        return Response(
+            serializer.data,
+        )
 
     def perform_update(self, serializer):
         serializer.save()
@@ -202,23 +204,34 @@ class APISignUp(APIView):
         serializer = SignUpSerializer(
             data=request.data,
         )
-        username = serializer.initial_data.get('username')
-        email = serializer.initial_data.get('email')
-        if not User.objects.filter(
+        if not serializer.is_valid():
+            username = serializer.data.get('username')
+            email = serializer.data.get('email')
+            if User.objects.filter(
                 username=username,
                 email=email,
-        ).exists():
+            ).exists():
+                user = User.objects.get(
+                    username=username,
+                    email=email,
+                )
+                confirmation_code = default_token_generator.make_token(user)
+                self.send_confirmation_code(
+                    confirmation_code,
+                    email,
+                )
+                return Response(
+                    serializer.data,
+                    status=HTTP_200_OK,
+                )
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+        serializer.save()
+        username = serializer.validated_data.get('username')
+        email = serializer.validated_data.get('email')
         user = User.objects.get(
             username=username,
             email=email,
         )
-        serializer = SignUpSerializer(
-            user,
-            data=request.data,
-        )
-        serializer.is_valid(raise_exception=True)
         confirmation_code = default_token_generator.make_token(user)
         self.send_confirmation_code(
             confirmation_code,
@@ -275,7 +288,7 @@ class APIToken(APIView):
 class UsersViewSet(ModelViewSet):
     """Вернет/обновит информацию о пользователях. Создаст/удалит юзера."""
 
-    queryset = User.objects.all().order_by('id')
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (
         IsAdmin,
