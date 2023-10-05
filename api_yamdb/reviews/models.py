@@ -2,7 +2,9 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from api_yamdb.constants import MAX_LENGHT_NAME, MAX_LENGHT_SLUG, MAX_LENGTH_STR 
+from api_yamdb.constants import (
+    MAX_LENGHT_NAME, MAX_LENGHT_SLUG, MAX_LENGTH_STR
+)
 from reviews.validators import validate_year
 
 User = get_user_model()
@@ -122,7 +124,6 @@ class Review(models.Model):
     )
 
     class Meta:
-        """Ограничение: один пользователь - одна заметка к записи."""
 
         verbose_name = 'обзор'
         verbose_name_plural = 'Обзоры'
