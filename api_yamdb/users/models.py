@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from api_yamdb.constants import (MAX_LENGHT_NAME, MAX_LENGHT_EMAIL,
+from api_yamdb.constants import (MAX_LENGHT_EMAIL, MAX_LENGHT_NAME,
                                  MAX_LENGHT_NAME_USER)
 
 

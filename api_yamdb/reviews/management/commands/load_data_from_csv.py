@@ -50,7 +50,7 @@ class Command(BaseCommand):
                 }
                 objects_of_model.append(model(**object_dict))
             model.objects.bulk_create(objects_of_model)
-            
+
             # model.objects.bulk_create([
             #     model(**{key: value for key, value in zip(header, row)})
             #     for row in reader
