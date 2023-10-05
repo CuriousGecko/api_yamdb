@@ -5,12 +5,7 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    """
-    Команда для создания объектов моделей из файлов csv.
-
-    # Будет выглядеть так:
-    # python manage.py load_data_from_csv --file_name comments.csv --model_name Comment --app_name reviews
-    """
+    """Создает объекты моделей из файлов csv."""
 
     help = 'Создает объект модели в базу данных из файла .csv'
 
@@ -50,8 +45,3 @@ class Command(BaseCommand):
                 }
                 objects_of_model.append(model(**object_dict))
             model.objects.bulk_create(objects_of_model)
-
-            # model.objects.bulk_create([
-            #     model(**{key: value for key, value in zip(header, row)})
-            #     for row in reader
-            # ])

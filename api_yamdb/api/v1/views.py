@@ -33,6 +33,8 @@ class BaseViewSet(
     mixins.CreateModelMixin,
     viewsets.GenericViewSet,
 ):
+    """Базовый класс фильтрует выдачу у наследников."""
+
     filter_backends = (
         filters.SearchFilter,
     )
@@ -42,6 +44,7 @@ class BaseViewSet(
 
 
 class PatchModelMixin:
+    """Миксин частично обновляет ресурс."""
 
     def perform_patch(self, serializer, **kwargs):
         serializer.save()
@@ -55,9 +58,7 @@ class PatchModelMixin:
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        return Response(
-            serializer.data,
-        )
+        return Response(serializer.data)
 
     def perform_update(self, serializer):
         serializer.save()
@@ -65,6 +66,8 @@ class PatchModelMixin:
 
 class CategoryViewSet(BaseViewSet):
     """
+    Обрабатывает запросы, связанные с категориями.
+
     Получение списка категорий - доступно всем без токена.
     Создание категории, удаление категории - только администратору.
     """
@@ -79,6 +82,8 @@ class CategoryViewSet(BaseViewSet):
 
 class GenreViewSet(BaseViewSet):
     """
+    Обрабатывает запросы, связанные с категориями.
+
     Получение списка жанров - доступно всем без токена.
     Создание и удаление жанра - только администратору.
     Удаление происходит по slug.
@@ -95,6 +100,8 @@ class GenreViewSet(BaseViewSet):
 class TitleViewSet(mixins.RetrieveModelMixin, PatchModelMixin,
                    BaseViewSet):
     """
+    Обрабатывает запросы, связанные с записями.
+
     Получение списка произведений - доступно всем без токена.
     Фильтрация по slug, году, названию, году.
     Создание, частичное изменение, удаление - только администратору.
@@ -128,7 +135,7 @@ class TitleViewSet(mixins.RetrieveModelMixin, PatchModelMixin,
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """Получение списка review, отдельного элемента."""
+    """Получает список review, отдельный элемент."""
 
     serializer_class = ReviewSerializer
     permission_classes = (
@@ -257,7 +264,7 @@ class APISignUp(APIView):
 
 
 class APIToken(APIView):
-    """Вернет JWT токен."""
+    """Возвращает JWT токен."""
 
     def post(self, request):
         serializer = TokenSerializer(
@@ -286,7 +293,12 @@ class APIToken(APIView):
 
 
 class UsersViewSet(ModelViewSet):
-    """Вернет/обновит информацию о пользователях. Создаст/удалит юзера."""
+    """
+    Обрабатывает запросы, связанные с пользователями.
+
+    Возвращает/обновляет информацию о пользователях.
+    Создает/удаляет пользователя.
+    """
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
