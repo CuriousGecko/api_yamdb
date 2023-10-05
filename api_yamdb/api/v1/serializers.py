@@ -18,7 +18,7 @@ class CategorySerializer(serializers.ModelSerializer):
             'slug',
         )
         model = Category
-        lookup_url_kwargs = 'slug'
+        lookup_field = 'slug'
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -52,16 +52,13 @@ class TitleGetSerializer(serializers.ModelSerializer):
         model = Title
 
     def get_rating(self, obj):
-        # return self.context['rating']
-
-        return self.context['rating'].get('avg')
-    #     """Считает среднюю оценку."""
-    #     rating = Title.objects.filter(
-    #         id=obj.id
-    #     ).aggregate(
-    #         avg=Avg('reviews__score')
-    #     )
-    #     return rating.get('avg')
+        """Считает среднюю оценку."""
+        rating = Title.objects.filter(
+            id=obj.id
+        ).aggregate(
+            avg=Avg('reviews__score')
+        )
+        return rating.get('avg')
 
 
 class TitlePostSerializer(TitleGetSerializer):
@@ -111,24 +108,6 @@ class ReviewSerializer(ModelSerializer):
                 message='Вы уже оставляли отзыв к этому произведению.'
             )
         ]
-
-    # def validate(self, data):
-    #     """
-    #     Ограничение уникальности для соблюдения правила
-    #     "один пользователь - одна заметка к записи".
-    #     """
-    #     if self.context['request'].method == 'POST':
-    #         author = self.context['request'].user
-    #         title = self.context['view'].kwargs['title_id']
-    #         existing_reviews = Review.objects.filter(
-    #             author=author,
-    #             title=title,
-    #         )
-    #         if existing_reviews.exists():
-    #             raise serializers.ValidationError(
-    #                 'Вы уже оставляли заметку к этой записи!'
-    #             )
-    #     return data
 
 
 class CommentSerializer(ModelSerializer):

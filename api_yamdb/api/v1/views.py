@@ -48,7 +48,7 @@ class CategoryViewSet(BaseViewSet):
 
     queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
-    lookup_url_kwargs = 'slug'
+    lookup_field = 'slug'
     permission_classes = (
         IsAdminOrReadOnly,
     )
@@ -101,33 +101,12 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         'patch',
         'delete',
     )
-    
-    # def get_rating(self):
-    #     """Считает среднюю оценку."""
-    #     rating = Title.objects.filter(
-    #         pk=self.kwargs.get('pk'),
-    #     ).aggregate(
-    #         avg=Avg('reviews__score')
-    #     )
-    #     return rating.get('avg')
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
             return TitleGetSerializer
         return TitlePostSerializer
-    
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        # if self.action == 'list'
-        context.update(
-            {
-                # 'rating': Title.objects.filter(pk=self.kwargs.get('pk')).aggregate(avg=Avg('reviews__score'))
-                'rating': Title.objects.aggregate(avg=Avg('reviews__score'))
-                
-            }
-        )
-        return context
-    
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Получение списка review, отдельного элемента."""
