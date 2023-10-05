@@ -2,6 +2,9 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from api_yamdb.constants import (MAX_LENGHT_NAME, MAX_LENGHT_EMAIL,
+                                 MAX_LENGHT_NAME_USER)
+
 
 class CustomUser(AbstractUser):
     """Переопределенная модель пользователя."""
@@ -13,18 +16,18 @@ class CustomUser(AbstractUser):
 
     role = models.CharField(
         'Роль',
-        max_length=255,
+        max_length=MAX_LENGHT_NAME,
         default=Roles.USER,
         choices=Roles.choices,
     )
     first_name = models.CharField(
         'Имя',
-        max_length=150,
+        max_length=MAX_LENGHT_NAME_USER,
         blank=True,
     )
     last_name = models.CharField(
         'Фамилия',
-        max_length=150,
+        max_length=MAX_LENGHT_NAME_USER,
         blank=True,
     )
     bio = models.TextField(
@@ -33,7 +36,7 @@ class CustomUser(AbstractUser):
     )
     email = models.EmailField(
         'Электронная почта',
-        max_length=254,
+        max_length=MAX_LENGHT_EMAIL,
         unique=True,
         blank=False,
         null=False,

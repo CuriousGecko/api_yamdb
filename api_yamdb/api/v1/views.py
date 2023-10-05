@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 from rest_framework.decorators import action
@@ -17,8 +18,8 @@ from api.v1.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
                                 IsAdminOrReadOnly, OwnerOnly)
 from api.v1.serializers import (CategorySerializer, CommentSerializer,
                                 GenreSerializer, ReviewSerializer,
-                                SignUpSerializer, TitleSerializerGet,
-                                TitleSerializerPost, TokenSerializer,
+                                SignUpSerializer, TitleGetSerializer,
+                                TitlePostSerializer, TokenSerializer,
                                 UserSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title
 
@@ -45,7 +46,7 @@ class CategoryViewSet(BaseViewSet):
     Создание категории, удаление категории - только администратору.
     """
 
-    queryset = Category.objects.all().order_by('id')
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     lookup_field = 'slug'
     permission_classes = (
@@ -60,7 +61,7 @@ class GenreViewSet(BaseViewSet):
     Удаление происходит по slug.
     """
 
-    queryset = Genre.objects.all().order_by('id')
+    queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
     lookup_field = 'slug'
     permission_classes = (
@@ -84,7 +85,9 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         ).select_related(
             'category',
         ).order_by(
-            'id',
+            'name',
+        ).annotate(
+            rating=Avg('reviews__score')
         )
     )
     filter_backends = (
@@ -102,9 +105,9 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     )
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return TitleSerializerGet
-        return TitleSerializerPost
+        if self.action == 'list' or self.action == 'retrieve':
+            return TitleGetSerializer
+        return TitlePostSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -120,16 +123,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         'patch',
         'delete',
     )
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context.update(
-            {
-                'title': self.kwargs['title_id'],
-                'method': self.request.method,
-            }
-        )
-        return context
 
     def get_queryset(self):
         return Review.objects.select_related(

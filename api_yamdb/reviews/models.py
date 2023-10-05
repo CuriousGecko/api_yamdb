@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from api_yamdb.constants import MAX_LENGHT_NAME, MAX_LENGHT_SLUG
 from reviews.validators import validate_year
 
 User = get_user_model()
@@ -12,11 +13,11 @@ class Category(models.Model):
 
     name = models.CharField(
         'Категория',
-        max_length=256,
+        max_length=MAX_LENGHT_NAME,
     )
     slug = models.SlugField(
         'Идентификатор',
-        max_length=50,
+        max_length=MAX_LENGHT_SLUG,
         unique=True,
     )
 
@@ -33,11 +34,11 @@ class Genre(models.Model):
 
     name = models.CharField(
         'Жанр',
-        max_length=256,
+        max_length=MAX_LENGHT_NAME,
     )
     slug = models.SlugField(
         'Идентификатор',
-        max_length=50,
+        max_length=MAX_LENGHT_SLUG,
         unique=True,
     )
 
@@ -54,15 +55,15 @@ class Title(models.Model):
 
     name = models.CharField(
         'Название',
-        max_length=256,
+        max_length=MAX_LENGHT_NAME,
     )
-    year = models.IntegerField(
+    year = models.PositiveSmallIntegerField(
         'Год',
         validators=[validate_year],
     )
     description = models.TextField(
         'Описание',
-        max_length=256,
+        max_length=MAX_LENGHT_NAME,
         blank=True,
     )
     category = models.ForeignKey(
@@ -75,7 +76,6 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        through='GenreTitle',
         related_name='titles_of_genre',
         verbose_name='Жанр',
     )
@@ -86,32 +86,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class GenreTitle(models.Model):
-    """Промежуточная таблица для связи Genre и Title."""
-
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        verbose_name='Жанр',
-    )
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        verbose_name='Произведение',
-    )
-
-    class Meta:
-        verbose_name = 'жанр/произведение'
-        verbose_name_plural = 'Жанры/Произведения'
-
-    def __str__(self):
-        return f'{self.genre} {self.title}'
 
 
 class Review(models.Model):
@@ -154,7 +128,7 @@ class Review(models.Model):
                     'title',
                     'author',
                 ],
-                name='unique_title_owner',
+                name='unique_title_owner'
             )
         ]
 
