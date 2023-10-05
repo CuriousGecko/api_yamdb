@@ -61,9 +61,9 @@ python3 manage.py runserver
 
 ## Авторы:
 
-[^1]: https://github.com/CuriousGecko
+* https://github.com/CuriousGecko
 
-[^2]: https://github.com/gazone-gazelle17
+* https://github.com/gazone-gazelle17
 
-[^3]: https://github.com/lengenkon
+* https://github.com/lengenkon
 
