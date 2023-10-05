@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 from rest_framework.decorators import action
@@ -15,10 +17,10 @@ from api.v1.filters import TitleFilter
 from api.v1.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
                                 IsAdminOrReadOnly, OwnerOnly)
 from api.v1.serializers import (CategorySerializer, CommentSerializer,
-                                ForAdminUsersSerializer, GenreSerializer,
-                                NotAdminUsersSerializer, ReviewSerializer,
-                                SignUpSerializer, TitleSerializerGet,
-                                TitleSerializerPost, TokenSerializer)
+                                GenreSerializer, ReviewSerializer,
+                                SignUpSerializer, TitleGetSerializer,
+                                TitlePostSerializer, TokenSerializer,
+                                UserSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -38,13 +40,34 @@ class BaseViewSet(
     )
 
 
+class PatchModelMixin:
+    def perform_patch(self, serializer, **kwargs):
+        serializer.save()
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance,
+                                         data=request.data,
+                                         partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        # queryset = self.filter_queryset(self.get_queryset())
+        # if queryset._prefetch_related_lookups:
+        #     instance._prefetched_objects_cashe = {}
+        #     prefetch_related_objects([instance], *queryset._prefetch_related_lookups)
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+
 class CategoryViewSet(BaseViewSet):
     """
     Получение списка категорий - доступно всем без токена.
     Создание категории, удаление категории - только администратору.
     """
 
-    queryset = Category.objects.all().order_by('id')
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     lookup_field = 'slug'
     permission_classes = (
@@ -59,7 +82,7 @@ class GenreViewSet(BaseViewSet):
     Удаление происходит по slug.
     """
 
-    queryset = Genre.objects.all().order_by('id')
+    queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
     lookup_field = 'slug'
     permission_classes = (
@@ -67,7 +90,7 @@ class GenreViewSet(BaseViewSet):
     )
 
 
-class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+class TitleViewSet(mixins.RetrieveModelMixin, PatchModelMixin,
                    BaseViewSet):
     """
     Получение списка произведений - доступно всем без токена.
@@ -83,7 +106,9 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         ).select_related(
             'category',
         ).order_by(
-            'id',
+            'name',
+        ).annotate(
+            rating=Avg('reviews__score')
         )
     )
     filter_backends = (
@@ -93,17 +118,11 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     permission_classes = (
         IsAdminOrReadOnly,
     )
-    http_method_names = (
-        'get',
-        'post',
-        'patch',
-        'delete',
-    )
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return TitleSerializerGet
-        return TitleSerializerPost
+        if self.action == 'list' or self.action == 'retrieve':
+            return TitleGetSerializer
+        return TitlePostSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -119,16 +138,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         'patch',
         'delete',
     )
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context.update(
-            {
-                'title': self.kwargs['title_id'],
-                'method': self.request.method,
-            }
-        )
-        return context
 
     def get_queryset(self):
         return Review.objects.select_related(
@@ -193,8 +202,8 @@ class APISignUp(APIView):
         serializer = SignUpSerializer(
             data=request.data,
         )
-        username = request.data.get('username')
-        email = request.data.get('email')
+        username = serializer.initial_data.get('username')
+        email = serializer.initial_data.get('email')
         if not User.objects.filter(
             username=username,
             email=email,
@@ -210,10 +219,11 @@ class APISignUp(APIView):
             data=request.data,
         )
         serializer.is_valid(raise_exception=True)
+        confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Запрошен код подтверждения для доступа к API YaMDb.',
             message=(
-                f'Ваш код подтверждения: {user.confirmation_code}'
+                f'Ваш код подтверждения: {confirmation_code}'
             ),
             from_email=settings.PRODUCT_EMAIL,
             recipient_list=(
@@ -237,11 +247,11 @@ class APIToken(APIView):
         serializer.is_valid(raise_exception=True)
         user = get_object_or_404(
             User,
-            username=request.data.get('username')
+            username=serializer.validated_data.get('username'),
         )
-        if (
-            serializer.validated_data.get('confirmation_code')
-                == str(user.confirmation_code)
+        if default_token_generator.check_token(
+                user,
+                serializer.validated_data.get('confirmation_code'),
         ):
             token = {
                 'token': f'{AccessToken.for_user(user)}'
@@ -260,7 +270,7 @@ class UsersViewSet(ModelViewSet):
     """Вернет/обновит информацию о пользователях. Создаст/удалит юзера."""
 
     queryset = User.objects.all().order_by('id')
-    serializer_class = ForAdminUsersSerializer
+    serializer_class = UserSerializer
     permission_classes = (
         IsAdmin,
     )
@@ -280,8 +290,7 @@ class UsersViewSet(ModelViewSet):
 
     @action(
         methods=[
-            'get',
-            'patch',
+            'get'
         ],
         permission_classes=(
             OwnerOnly,
@@ -294,22 +303,29 @@ class UsersViewSet(ModelViewSet):
             User,
             username=request.user,
         )
-        if request.method == 'GET':
-            serializer = NotAdminUsersSerializer(
-                user,
-            )
-            return Response(
-                serializer.data,
-            )
-        if request.method == 'PATCH':
-            serializer = NotAdminUsersSerializer(
-                user,
-                data=request.data,
-                partial=True,
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(
-                serializer.data,
-                status=HTTP_200_OK,
-            )
+        serializer = UserSerializer(
+            user,
+        )
+        return Response(
+            serializer.data,
+        )
+
+    @me_path.mapping.patch
+    def me_path_patch(self, request):
+        user = get_object_or_404(
+            User,
+            username=request.user,
+        )
+        serializer = UserSerializer(
+            user,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(
+            role=request.user.role,
+        )
+        return Response(
+            serializer.data,
+            status=HTTP_200_OK,
+        )

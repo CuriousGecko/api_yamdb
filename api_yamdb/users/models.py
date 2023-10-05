@@ -1,61 +1,64 @@
-import uuid
-
 from django.contrib.auth.models import AbstractUser
-from django.db.models import (CharField, EmailField, TextChoices, TextField,
-                              UUIDField)
+from django.core.exceptions import ValidationError
+from django.db import models
 
-from users.validators import validate_username
+from api_yamdb.constants import (MAX_LENGHT_NAME, MAX_LENGHT_EMAIL,
+                                 MAX_LENGHT_NAME_USER)
 
 
 class CustomUser(AbstractUser):
-    """Измененная модель пользователя."""
+    """Переопределенная модель пользователя."""
 
-    class Roles(TextChoices):
+    class Roles(models.TextChoices):
         USER = 'user'
         MODERATOR = 'moderator'
         ADMIN = 'admin'
 
-    role = CharField(
+    role = models.CharField(
         'Роль',
-        max_length=255,
+        max_length=MAX_LENGHT_NAME,
         default=Roles.USER,
         choices=Roles.choices,
     )
-    username = CharField(
-        'Имя пользователя',
-        max_length=150,
-        unique=True,
-        blank=False,
-        null=False,
-        validators=[validate_username],
-    )
-    first_name = CharField(
+    first_name = models.CharField(
         'Имя',
-        max_length=150,
+        max_length=MAX_LENGHT_NAME_USER,
         blank=True,
     )
-    last_name = CharField(
+    last_name = models.CharField(
         'Фамилия',
-        max_length=150,
+        max_length=MAX_LENGHT_NAME_USER,
         blank=True,
     )
-    bio = TextField(
+    bio = models.TextField(
         'О пользователе',
         blank=True,
     )
-    email = EmailField(
+    email = models.EmailField(
         'Электронная почта',
-        max_length=254,
+        max_length=MAX_LENGHT_EMAIL,
         unique=True,
         blank=False,
         null=False,
+        error_messages={
+            'unique': 'Пользователь с такой электронной почтой уже существует.'
+        },
     )
-    confirmation_code = UUIDField(
-        'Код подтверждения',
-        default=uuid.uuid4,
-        editable=False,
-        unique=True,
-    )
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        ordering = ['username']
+
+    def clean(self):
+        super().clean()
+        if self.username == 'me':
+            raise ValidationError(
+                'Недопустимое имя пользователя: me.'
+            )
 
     @property
     def is_admin_or_superuser(self):
@@ -64,3 +67,6 @@ class CustomUser(AbstractUser):
     @property
     def is_moderator(self):
         return self.role == 'moderator'
+
+    def __str__(self):
+        return self.username
