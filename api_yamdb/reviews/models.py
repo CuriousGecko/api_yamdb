@@ -4,6 +4,8 @@ from django.db import models
 
 from reviews.validators import validate_year
 
+STR_LIMIT = 10
+
 User = get_user_model()
 
 
@@ -14,7 +16,7 @@ class Category(models.Model):
     slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.name[:STR_LIMIT]
 
 
 class Genre(models.Model):
@@ -24,7 +26,7 @@ class Genre(models.Model):
     slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.name[:STR_LIMIT]
 
 
 class Title(models.Model):
@@ -52,7 +54,7 @@ class Title(models.Model):
     )
 
     def __str__(self):
-        return self.name
+        return self.name[:STR_LIMIT]
 
 
 class GenreTitle(models.Model):
@@ -87,8 +89,12 @@ class Review(models.Model):
     )
     score = models.IntegerField(
         validators=[
-            MaxValueValidator(10),
-            MinValueValidator(1),
+            MaxValueValidator(
+                10, message='Оценка должна быть не более 10 баллов.'
+            ),
+            MinValueValidator(
+                1, message='Оценка должна быть не менее 1 балла.'
+            ),
         ]
     )
     pub_date = models.DateTimeField(auto_now_add=True)
@@ -105,9 +111,10 @@ class Review(models.Model):
                 name='unique_title_owner',
             )
         ]
+        ordering = ['-pub_date']
 
     def __str__(self):
-        return self.text
+        return self.text[:STR_LIMIT]
 
 
 class Comment(models.Model):
@@ -133,4 +140,4 @@ class Comment(models.Model):
     )
 
     def __str__(self):
-        return self.text
+        return self.text[:STR_LIMIT]
