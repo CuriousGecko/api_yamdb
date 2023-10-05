@@ -53,7 +53,10 @@ class TitleSerializerGet(serializers.ModelSerializer):
     def get_rating(self, obj):
         """Считает среднюю оценку."""
         rating = Title.objects.filter(
-            id=obj.id).aggregate(avg=Avg('reviews__score'))
+            id=obj.id
+        ).aggregate(
+            avg=Avg('reviews__score')
+        )
         return rating.get('avg')
 
 
@@ -127,7 +130,7 @@ class CommentSerializer(ModelSerializer):
         )
 
 
-class SignUpSerializer(ModelSerializer):
+class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -136,24 +139,8 @@ class SignUpSerializer(ModelSerializer):
         )
 
     def validate(self, data):
-        """Проверит схожесть аккаунта пользователя в БД и данных запроса."""
-        username = data.get('username')
-        email = data.get('email')
-        if (
-                User.objects.filter(username=username).exists()
-                and User.objects.get(username=username).email != email
-        ):
-            raise serializers.ValidationError(
-                f'Пользователь с именем {username} уже существует.'
-            )
-        if (
-                User.objects.filter(email=email).exists()
-                and User.objects.get(email=email).username != username
-        ):
-            raise serializers.ValidationError(
-                f'Пользователь с почтовым адресом {email} '
-                f'уже существует.'
-            )
+        instance = self.Meta.model(**data)
+        instance.clean()
         return data
 
 
@@ -164,9 +151,10 @@ class TokenSerializer(serializers.Serializer):
     confirmation_code = CharField()
 
 
-class ForAdminUsersSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
+        # Тесты требуют роль).
         fields = (
             'role',
             'username',
@@ -176,8 +164,7 @@ class ForAdminUsersSerializer(serializers.ModelSerializer):
             'bio',
         )
 
-
-class NotAdminUsersSerializer(ForAdminUsersSerializer):
-    role = CharField(
-        read_only=True,
-    )
+    def validate(self, data):
+        instance = self.Meta.model(**data)
+        instance.clean()
+        return data
