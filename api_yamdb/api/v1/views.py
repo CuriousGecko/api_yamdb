@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 from rest_framework.decorators import action
@@ -17,8 +18,8 @@ from api.v1.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
                                 IsAdminOrReadOnly, OwnerOnly)
 from api.v1.serializers import (CategorySerializer, CommentSerializer,
                                 GenreSerializer, ReviewSerializer,
-                                SignUpSerializer, TitleSerializerGet,
-                                TitleSerializerPost, TokenSerializer,
+                                SignUpSerializer, TitleGetSerializer,
+                                TitlePostSerializer, TokenSerializer,
                                 UserSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title
 
@@ -94,21 +95,39 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     permission_classes = (
         IsAdminOrReadOnly,
     )
-
-    @action(
-        detail=False,
-        methods=[
-            'get',
-            'post',
-            'patch',
-            'delete'
-        ]
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
     )
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return TitleSerializerGet
-        return TitleSerializerPost
+    
+    # def get_rating(self):
+    #     """Считает среднюю оценку."""
+    #     rating = Title.objects.filter(
+    #         pk=self.kwargs.get('pk'),
+    #     ).aggregate(
+    #         avg=Avg('reviews__score')
+    #     )
+    #     return rating.get('avg')
 
+    def get_serializer_class(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            return TitleGetSerializer
+        return TitlePostSerializer
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        # if self.action == 'list'
+        context.update(
+            {
+                # 'rating': Title.objects.filter(pk=self.kwargs.get('pk')).aggregate(avg=Avg('reviews__score'))
+                'rating': Title.objects.aggregate(avg=Avg('reviews__score'))
+                
+            }
+        )
+        return context
+    
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Получение списка review, отдельного элемента."""
@@ -123,16 +142,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         'patch',
         'delete',
     )
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context.update(
-            {
-                'title': self.kwargs['title_id'],
-                'method': self.request.method,
-            }
-        )
-        return context
 
     def get_queryset(self):
         return Review.objects.select_related(

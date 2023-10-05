@@ -56,7 +56,7 @@ class Title(models.Model):
         'Название',
         max_length=256,
     )
-    year = models.IntegerField(
+    year = models.PositiveSmallIntegerField(
         'Год',
         validators=[validate_year],
     )
@@ -127,7 +127,7 @@ class Review(models.Model):
                     'title',
                     'author',
                 ],
-                name='unique_title_owner',
+                name='unique_title_owner'
             )
         ]
 
