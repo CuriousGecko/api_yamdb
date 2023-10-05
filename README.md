@@ -18,6 +18,7 @@
 ```
 git clone git@github.com:CuriousGecko/api_yamdb.git
 ```
+```
 cd api_yamdb
 ```
 Cоздать виртуальное окружение, если у вас Linux/macOS - (python3):
