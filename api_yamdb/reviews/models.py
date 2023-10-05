@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from api_yamdb.constants import MAX_LENGHT_NAME, MAX_LENGHT_SLUG
+from api_yamdb.constants import MAX_LENGHT_NAME, MAX_LENGHT_SLUG, MAX_LENGTH_STR 
 from reviews.validators import validate_year
 
 User = get_user_model()
@@ -26,7 +26,7 @@ class Category(models.Model):
         verbose_name_plural = 'Категории'
 
     def __str__(self):
-        return self.name
+        return self.name[:MAX_LENGTH_STR]
 
 
 class Genre(models.Model):
@@ -47,7 +47,7 @@ class Genre(models.Model):
         verbose_name_plural = 'Жанры'
 
     def __str__(self):
-        return self.name
+        return self.name[:MAX_LENGTH_STR]
 
 
 class Title(models.Model):
@@ -85,7 +85,7 @@ class Title(models.Model):
         verbose_name_plural = 'Произведения'
 
     def __str__(self):
-        return self.name
+        return self.name[:MAX_LENGTH_STR]
 
 
 class Review(models.Model):
@@ -108,9 +108,13 @@ class Review(models.Model):
     score = models.IntegerField(
         'Рейтинг',
         validators=[
-            MaxValueValidator(10),
-            MinValueValidator(1),
-        ],
+            MaxValueValidator(
+                10, message='Оценка должна быть не более 10 баллов.'
+            ),
+            MinValueValidator(
+                1, message='Оценка должна быть не менее 1 балла.'
+            ),
+        ]
     )
     pub_date = models.DateTimeField(
         'Дата и время публикации',
@@ -131,9 +135,10 @@ class Review(models.Model):
                 name='unique_title_owner'
             )
         ]
+        ordering = ['-pub_date']
 
     def __str__(self):
-        return self.text
+        return self.text[:MAX_LENGTH_STR]
 
 
 class Comment(models.Model):
@@ -163,4 +168,4 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return self.text
+        return self.text[:MAX_LENGTH_STR]
