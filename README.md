@@ -81,7 +81,7 @@ python3 manage.py runserver
 
 ### 2. Создание и просмотр отзывов к произведению.
 
-+ `GET api/v1/titles/{title_id}/reviews/{review_id}/` -  адрес для GET, PATCH и DELETE-запросов для, соответственно, получения, частичного редактирования и удаления конкретного комментария;
++ `GET api/v1/titles/{title_id}/reviews/{review_id}/` -  адрес для GET, PATCH и DELETE-запросов для, соответственно, получения, частичного редактирования и удаления конкретного отзыва;
   + Пример ответа:
   ```
     {
@@ -92,7 +92,7 @@ python3 manage.py runserver
         "pub_date": "2019-08-24T14:15:22Z"
     }
     ```
-+ `POST api/v1/titles/{title_id}/reviews/` - адрес для POST-запроса для создания нового комментария;
++ `POST api/v1/titles/{title_id}/reviews/` - адрес для POST-запроса для создания нового отзыва;
 + `GET api/v1/titles/{title_id}/reviews/` - адрес для получения списка отзывов.
 
 ### 3. Регистрация и получение токена.
