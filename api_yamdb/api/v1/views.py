@@ -40,6 +40,27 @@ class BaseViewSet(
     )
 
 
+class PatchModelMixin:
+    def perform_patch(self, serializer, **kwargs):
+        serializer.save()
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance,
+                                         data=request.data,
+                                         partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        # queryset = self.filter_queryset(self.get_queryset())
+        # if queryset._prefetch_related_lookups:
+        #     instance._prefetched_objects_cashe = {}
+        #     prefetch_related_objects([instance], *queryset._prefetch_related_lookups)
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+
 class CategoryViewSet(BaseViewSet):
     """
     Получение списка категорий - доступно всем без токена.
@@ -69,7 +90,7 @@ class GenreViewSet(BaseViewSet):
     )
 
 
-class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+class TitleViewSet(mixins.RetrieveModelMixin, PatchModelMixin,
                    BaseViewSet):
     """
     Получение списка произведений - доступно всем без токена.
@@ -96,12 +117,6 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     filterset_class = TitleFilter
     permission_classes = (
         IsAdminOrReadOnly,
-    )
-    http_method_names = (
-        'get',
-        'post',
-        'patch',
-        'delete',
     )
 
     def get_serializer_class(self):
@@ -275,8 +290,7 @@ class UsersViewSet(ModelViewSet):
 
     @action(
         methods=[
-            'get',
-            'patch',
+            'get'
         ],
         permission_classes=(
             OwnerOnly,
@@ -289,24 +303,29 @@ class UsersViewSet(ModelViewSet):
             User,
             username=request.user,
         )
-        if request.method == 'GET':
-            serializer = UserSerializer(
-                user,
-            )
-            return Response(
-                serializer.data,
-            )
-        if request.method == 'PATCH':
-            serializer = UserSerializer(
-                user,
-                data=request.data,
-                partial=True,
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(
-                role=request.user.role,
-            )
-            return Response(
-                serializer.data,
-                status=HTTP_200_OK,
-            )
+        serializer = UserSerializer(
+            user,
+        )
+        return Response(
+            serializer.data,
+        )
+
+    @me_path.mapping.patch
+    def me_path_patch(self, request):
+        user = get_object_or_404(
+            User,
+            username=request.user,
+        )
+        serializer = UserSerializer(
+            user,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(
+            role=request.user.role,
+        )
+        return Response(
+            serializer.data,
+            status=HTTP_200_OK,
+        )
