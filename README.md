@@ -12,3 +12,58 @@
 Пользователи могут оставлять комментарии к отзывам.
 
 Добавлять отзывы, комментарии и ставить оценки могут только аутентифицированные пользователи.
+
+## Как запустить проект: 
+Клонировать репозиторий и перейти в него в командной строке:
+```
+git clone git@github.com:CuriousGecko/api_yamdb.git
+```
+```
+cd api_yamdb
+```
+Cоздать виртуальное окружение, если у вас Linux/macOS - (python3):
+```
+python3 -m venv env
+```
+Если Windows - (python):
+```
+python -m venv env
+```
+Активировать виртуальное окружение, если у вас Linux/macOS:
+```
+source env/bin/activate
+```
+Если у вас Windows:
+```
+source env/scripts/activate
+```
+Обновить pip
+```
+python3 -m pip install --upgrade pip
+```
+Установить зависимости из файла requirements.txt:
+```
+pip install -r requirements.txt
+```
+Выполнить миграции:
+```
+python3 manage.py migrate
+```
+Запустить проект:
+```
+python3 manage.py runserver
+```
+
+## Используемые технологии:
+
+Проект создан с помощью **Django REST framework**, аутентификация настроена с помощью **Simple JWT**.
+Полный список библиотек в файле requirements.txt.
+
+## Авторы:
+
+* https://github.com/CuriousGecko
+
+* https://github.com/gazone-gazelle17
+
+* https://github.com/lengenkon
+

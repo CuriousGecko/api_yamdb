@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from api_yamdb.constants import (MAX_LENGHT_NAME, MAX_LENGHT_EMAIL,
+from api_yamdb.constants import (MAX_LENGHT_EMAIL, MAX_LENGHT_NAME,
                                  MAX_LENGHT_NAME_USER)
 
 
@@ -53,6 +53,9 @@ class CustomUser(AbstractUser):
         verbose_name_plural = 'Пользователи'
         ordering = ['username']
 
+    def __str__(self):
+        return self.username
+
     def clean(self):
         super().clean()
         if self.username == 'me':
@@ -67,6 +70,3 @@ class CustomUser(AbstractUser):
     @property
     def is_moderator(self):
         return self.role == 'moderator'
-
-    def __str__(self):
-        return self.username

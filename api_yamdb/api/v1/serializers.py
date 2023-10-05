@@ -72,11 +72,11 @@ class ReviewSerializer(ModelSerializer):
     author = SlugRelatedField(
         read_only=True,
         slug_field='username',
-        default=serializers.CurrentUserDefault()
+        default=serializers.CurrentUserDefault(),
     )
     title = serializers.PrimaryKeyRelatedField(
         queryset=Title.objects.all(),
-        default=CurrentTitleDefault()
+        default=CurrentTitleDefault(),
     )
 
     class Meta:
@@ -102,7 +102,7 @@ class CommentSerializer(ModelSerializer):
     author = SlugRelatedField(
         read_only=True,
         slug_field='username',
-        default=serializers.CurrentUserDefault()
+        default=serializers.CurrentUserDefault(),
     )
 
     class Meta:
