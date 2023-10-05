@@ -3,6 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from reviews.validators import validate_year
+from api_yamdb.constants import MAX_LENGHT_NAME, MAX_LENGHT_SLUG
 
 User = get_user_model()
 
@@ -12,11 +13,11 @@ class Category(models.Model):
 
     name = models.CharField(
         'Категория',
-        max_length=256,
+        max_length=MAX_LENGHT_NAME,
     )
     slug = models.SlugField(
         'Идентификатор',
-        max_length=50,
+        max_length=MAX_LENGHT_SLUG,
         unique=True,
     )
 
@@ -33,11 +34,11 @@ class Genre(models.Model):
 
     name = models.CharField(
         'Жанр',
-        max_length=256,
+        max_length=MAX_LENGHT_NAME,
     )
     slug = models.SlugField(
         'Идентификатор',
-        max_length=50,
+        max_length=MAX_LENGHT_SLUG,
         unique=True,
     )
 
@@ -54,7 +55,7 @@ class Title(models.Model):
 
     name = models.CharField(
         'Название',
-        max_length=256,
+        max_length=MAX_LENGHT_NAME,
     )
     year = models.PositiveSmallIntegerField(
         'Год',
@@ -62,7 +63,7 @@ class Title(models.Model):
     )
     description = models.TextField(
         'Описание',
-        max_length=256,
+        max_length=MAX_LENGHT_NAME,
         blank=True,
     )
     category = models.ForeignKey(
