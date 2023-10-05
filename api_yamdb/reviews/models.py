@@ -50,7 +50,7 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    """Модель для хранения записей."""
+    """Модель для хранения записей произведений."""
 
     name = models.CharField(
         'Название',
@@ -103,25 +103,25 @@ class GenreTitle(models.Model):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        verbose_name='Название',
+        verbose_name='Произведение',
     )
 
     class Meta:
-        verbose_name = 'жанр/обзор'
-        verbose_name_plural = 'Жанры/Обзоры'
+        verbose_name = 'жанр/произведение'
+        verbose_name_plural = 'Жанры/Произведения'
 
     def __str__(self):
         return f'{self.genre} {self.title}'
 
 
 class Review(models.Model):
-    """Модель для хранения обзоров на записи."""
+    """Модель для хранения обзоров на произведения."""
 
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         related_name='reviews',
-        verbose_name='Заголовок',
+        verbose_name='Произведение',
     )
     text = models.TextField(
         'Текст обзора',
