@@ -44,7 +44,7 @@ class CategoryViewSet(BaseViewSet):
     Создание категории, удаление категории - только администратору.
     """
 
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     lookup_url_kwargs = 'slug'
     permission_classes = (
@@ -59,7 +59,7 @@ class GenreViewSet(BaseViewSet):
     Удаление происходит по slug.
     """
 
-    queryset = Genre.objects.all()
+    queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
     lookup_field = 'slug'
     permission_classes = (
@@ -83,7 +83,7 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         ).select_related(
             'category',
         ).order_by(
-            'id',
+            'name',
         )
     )
     filter_backends = (
@@ -93,13 +93,16 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     permission_classes = (
         IsAdminOrReadOnly,
     )
-    http_method_names = (
-        'get',
-        'post',
-        'patch',
-        'delete',
-    )
 
+    @action(
+        detail=False,
+        methods=[
+            'get',
+            'post',
+            'patch',
+            'delete'
+        ]
+    )
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return TitleSerializerGet

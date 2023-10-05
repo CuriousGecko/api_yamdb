@@ -98,7 +98,7 @@ class ReviewSerializer(ModelSerializer):
         """
         if self.context['method'] == 'POST':
             author = self.context['request'].user
-            title = self.context['title']
+            title = self.context.kwargs['title_id']
             existing_reviews = Review.objects.filter(
                 author=author,
                 title=title,
