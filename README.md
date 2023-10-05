@@ -53,6 +53,77 @@ python3 manage.py migrate
 ```
 python3 manage.py runserver
 ```
+## Примеры запросов и ответов.
+
+# 1. Создание, просмотр и редактирование постов
+
++ `POST api/v1/categories/` - адрес для POST-запроса для создания новой категори;
+  + Пример ответа:
+  ```
+    { 
+        "name": "string",
+        "slug": "string"
+    }
+    ```
++ `GET api/v1/categories/` - адрес для GET-запроса списка категорий;
+  + Пример ответа:
+  ```
+    {
+        "count": 0,
+        "next": "string",
+        "previous": "string",
+        "results": [
+            {}
+        ]
+    }
+    ```
++ `DELETE api/v1/categories/{slug}}/` - адрес для DELETE-запроса для удаления конкретной записи;
+
+# 2. Создание и просмотр отзывов к произведению
+
++ `GET api/v1/titles/{title_id}/reviews/{review_id}/` -  адрес для GET, PATCH и DELETE-запросов для, соответственно, получения, частичного редактирования и удаления конкретного комментария;
+  + Пример ответа:
+  ```
+    {
+        "id": 0,
+        "text": "string",
+        "author": "string",
+        "score": 1,
+        "pub_date": "2019-08-24T14:15:22Z"
+    }
+    ```
++ `POST api/v1/titles/{title_id}/reviews/` - адрес для POST-запроса для создания нового комментария;
++ `GET api/v1/titles/{title_id}/reviews/` - адрес для получения списка отзывов;
+
+# 3. Регистрация и получение токена
+
++ `POST api/v1/auth/signup/` - адрес для POST-запроса для регистрации пользователя
+  + Пример ответа:
+  ```
+    {
+        "email": "string",
+        "username": "string"
+    }
+    ```
+
++ `POST api/v1/auth/token/` - адрес для получение токена
+  + Пример запроса:
+  ```
+    {
+        "username": "string",
+        "confirmation_code": "string"
+    }
+    ```
+  + Пример ответа:
+  ```
+    {
+        "token": "string"
+    }
+    ```
+# Полная документация
+
++ `GET redoc/` - адрес для получения полной документации
+
 
 ## Используемые технологии:
 
