@@ -290,8 +290,7 @@ class UsersViewSet(ModelViewSet):
 
     @action(
         methods=[
-            'get',
-            'patch',
+            'get'
         ],
         permission_classes=(
             OwnerOnly,
@@ -304,24 +303,29 @@ class UsersViewSet(ModelViewSet):
             User,
             username=request.user,
         )
-        if request.method == 'GET':
-            serializer = UserSerializer(
-                user,
-            )
-            return Response(
-                serializer.data,
-            )
-        if request.method == 'PATCH':
-            serializer = UserSerializer(
-                user,
-                data=request.data,
-                partial=True,
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(
-                role=request.user.role,
-            )
-            return Response(
-                serializer.data,
-                status=HTTP_200_OK,
-            )
+        serializer = UserSerializer(
+            user,
+        )
+        return Response(
+            serializer.data,
+        )
+
+    @me_path.mapping.patch
+    def me_path_patch(self, request):
+        user = get_object_or_404(
+            User,
+            username=request.user,
+        )
+        serializer = UserSerializer(
+            user,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(
+            role=request.user.role,
+        )
+        return Response(
+            serializer.data,
+            status=HTTP_200_OK,
+        )
