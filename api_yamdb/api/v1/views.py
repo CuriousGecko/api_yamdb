@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
@@ -210,10 +211,11 @@ class APISignUp(APIView):
             data=request.data,
         )
         serializer.is_valid(raise_exception=True)
+        confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Запрошен код подтверждения для доступа к API YaMDb.',
             message=(
-                f'Ваш код подтверждения: {user.confirmation_code}'
+                f'Ваш код подтверждения: {confirmation_code}'
             ),
             from_email=settings.PRODUCT_EMAIL,
             recipient_list=(
@@ -237,11 +239,11 @@ class APIToken(APIView):
         serializer.is_valid(raise_exception=True)
         user = get_object_or_404(
             User,
-            username=request.data.get('username')
+            username=serializer.validated_data.get('username'),
         )
-        if (
-            serializer.validated_data.get('confirmation_code')
-                == str(user.confirmation_code)
+        if default_token_generator.check_token(
+                user,
+                serializer.validated_data.get('confirmation_code'),
         ):
             token = {
                 'token': f'{AccessToken.for_user(user)}'
