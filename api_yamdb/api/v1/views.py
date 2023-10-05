@@ -86,6 +86,8 @@ class TitleViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             'category',
         ).order_by(
             'name',
+        ).annotate(
+            rating=Avg('reviews__score')
         )
     )
     filter_backends = (

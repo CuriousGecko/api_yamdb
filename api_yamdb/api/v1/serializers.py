@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
@@ -37,7 +36,7 @@ class TitleGetSerializer(serializers.ModelSerializer):
         read_only=True,
         many=True,
     )
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = (
@@ -50,15 +49,6 @@ class TitleGetSerializer(serializers.ModelSerializer):
             'rating',
         )
         model = Title
-
-    def get_rating(self, obj):
-        """Считает среднюю оценку."""
-        rating = Title.objects.filter(
-            id=obj.id
-        ).aggregate(
-            avg=Avg('reviews__score')
-        )
-        return rating.get('avg')
 
 
 class TitlePostSerializer(TitleGetSerializer):
