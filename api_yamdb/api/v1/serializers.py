@@ -17,7 +17,6 @@ class CategorySerializer(serializers.ModelSerializer):
             'slug',
         )
         model = Category
-        lookup_field = 'slug'
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -27,7 +26,6 @@ class GenreSerializer(serializers.ModelSerializer):
             'slug',
         )
         model = Genre
-        lookup_field = 'slug'
 
 
 class TitleGetSerializer(serializers.ModelSerializer):
