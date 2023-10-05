@@ -2,9 +2,8 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from api_yamdb.constants import (
-    MAX_LENGHT_NAME, MAX_LENGHT_SLUG, MAX_LENGTH_STR
-)
+from api_yamdb.constants import (MAX_LENGHT_NAME, MAX_LENGHT_SLUG,
+                                 MAX_LENGTH_STR)
 from reviews.validators import validate_year
 
 User = get_user_model()
@@ -106,15 +105,18 @@ class Review(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор',
+        related_name='author_of_reviews',
     )
     score = models.IntegerField(
         'Рейтинг',
         validators=[
             MaxValueValidator(
-                10, message='Оценка должна быть не более 10 баллов.'
+                10,
+                message='Оценка должна быть не более 10 баллов.',
             ),
             MinValueValidator(
-                1, message='Оценка должна быть не менее 1 балла.'
+                1,
+                message='Оценка должна быть не менее 1 балла.',
             ),
         ]
     )
@@ -124,7 +126,6 @@ class Review(models.Model):
     )
 
     class Meta:
-
         verbose_name = 'обзор'
         verbose_name_plural = 'Обзоры'
         constraints = [
@@ -133,7 +134,7 @@ class Review(models.Model):
                     'title',
                     'author',
                 ],
-                name='unique_title_owner'
+                name='unique_title_owner',
             )
         ]
         ordering = ['-pub_date']
@@ -157,7 +158,8 @@ class Comment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Автор'
+        verbose_name='Автор',
+        related_name='author_of_comments',
     )
     pub_date = models.DateTimeField(
         'Дата и время публикации',
