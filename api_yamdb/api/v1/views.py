@@ -275,7 +275,7 @@ class APIToken(APIView):
 class UsersViewSet(ModelViewSet):
     """Вернет/обновит информацию о пользователях. Создаст/удалит юзера."""
 
-    queryset = User.objects.all().order_by('id')
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (
         IsAdmin,
