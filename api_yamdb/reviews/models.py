@@ -137,7 +137,7 @@ class Review(models.Model):
                 name='unique_title_owner',
             )
         ]
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.text[:MAX_LENGTH_STR]

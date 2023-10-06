@@ -5,6 +5,7 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ModelSerializer
 from rest_framework.validators import UniqueTogetherValidator
 
+from api_yamdb.constants import MAX_LENGHT_TOKEN
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -123,15 +124,17 @@ class SignUpSerializer(serializers.ModelSerializer):
             'email',
         )
 
-    def validate(self, data):
-        instance = self.Meta.model(**data)
-        instance.clean()
-        return data
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(
+                'Недопустимое имя пользователя: me.'
+            )
+        return value
 
 
 class TokenSerializer(serializers.Serializer):
     username = CharField(
-        max_length=150,
+        max_length=MAX_LENGHT_TOKEN,
     )
     confirmation_code = CharField()
 
@@ -139,7 +142,10 @@ class TokenSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        # Тесты требуют роль).
+        # AssertionError: Если POST-запрос к `/api/v1/users/`
+        # содержит корректные данные - в ответе должны содержаться
+        # данные нового пользователя.
+        # Сейчас ключ role отсутствует либо содержит некорректные данные.
         fields = (
             'role',
             'username',
@@ -149,7 +155,9 @@ class UserSerializer(serializers.ModelSerializer):
             'bio',
         )
 
-    def validate(self, data):
-        instance = self.Meta.model(**data)
-        instance.clean()
-        return data
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(
+                'Недопустимое имя пользователя: me.'
+            )
+        return value

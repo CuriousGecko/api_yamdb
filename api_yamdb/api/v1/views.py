@@ -1,7 +1,5 @@
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
@@ -22,6 +20,7 @@ from api.v1.serializers import (CategorySerializer, CommentSerializer,
                                 SignUpSerializer, TitleGetSerializer,
                                 TitlePostSerializer, TokenSerializer,
                                 UserSerializer)
+from api.v1.utils import send_confirmation_code
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
@@ -222,7 +221,7 @@ class APISignUp(APIView):
                     username=username,
                     email=email,
                 )
-                self.send_confirmation_code(
+                send_confirmation_code(
                     user,
                     email,
                 )
@@ -238,27 +237,13 @@ class APISignUp(APIView):
             username=username,
             email=email,
         )
-        self.send_confirmation_code(
+        send_confirmation_code(
             user,
             email,
         )
         return Response(
             serializer.validated_data,
             status=HTTP_200_OK,
-        )
-
-    def send_confirmation_code(self, user, email):
-        confirmation_code = default_token_generator.make_token(user)
-        send_mail(
-            subject='Запрошен код подтверждения для доступа к API YaMDb.',
-            message=(
-                f'Ваш код подтверждения: {confirmation_code}'
-            ),
-            from_email=settings.PRODUCT_EMAIL,
-            recipient_list=(
-                email,
-            ),
-            fail_silently=False,
         )
 
 

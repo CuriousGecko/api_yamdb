@@ -1,9 +1,7 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.db import models
 
-from api_yamdb.constants import (MAX_LENGHT_EMAIL, MAX_LENGHT_NAME,
-                                 MAX_LENGHT_NAME_USER)
+from api_yamdb.constants import MAX_LENGHT_EMAIL, MAX_LENGHT_ROLE
 
 
 class CustomUser(AbstractUser):
@@ -16,19 +14,9 @@ class CustomUser(AbstractUser):
 
     role = models.CharField(
         'Роль',
-        max_length=MAX_LENGHT_NAME,
+        max_length=MAX_LENGHT_ROLE,
         default=Roles.USER,
         choices=Roles.choices,
-    )
-    first_name = models.CharField(
-        'Имя',
-        max_length=MAX_LENGHT_NAME_USER,
-        blank=True,
-    )
-    last_name = models.CharField(
-        'Фамилия',
-        max_length=MAX_LENGHT_NAME_USER,
-        blank=True,
     )
     bio = models.TextField(
         'О пользователе',
@@ -38,8 +26,6 @@ class CustomUser(AbstractUser):
         'Электронная почта',
         max_length=MAX_LENGHT_EMAIL,
         unique=True,
-        blank=False,
-        null=False,
         error_messages={
             'unique': 'Пользователь с такой электронной почтой уже существует.'
         },
@@ -51,20 +37,13 @@ class CustomUser(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        ordering = ['username']
+        ordering = ('username',)
 
     def __str__(self):
         return self.username
 
-    def clean(self):
-        super().clean()
-        if self.username == 'me':
-            raise ValidationError(
-                'Недопустимое имя пользователя: me.'
-            )
-
     @property
-    def is_admin_or_superuser(self):
+    def is_admin(self):
         return self.role == 'admin' or self.is_superuser
 
     @property
