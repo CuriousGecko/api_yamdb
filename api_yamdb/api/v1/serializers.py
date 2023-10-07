@@ -95,7 +95,7 @@ class ReviewSerializer(ModelSerializer):
             UniqueTogetherValidator(
                 queryset=Review.objects.all(),
                 fields=(
-                    'title', 
+                    'title',
                     'author',
                 ),
                 message='Вы уже оставляли отзыв к этому произведению.',
