@@ -2,14 +2,13 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, viewsets
+from rest_framework import filters
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
 from api.v1.filters import TitleFilter
@@ -18,52 +17,17 @@ from api.v1.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
 from api.v1.serializers import (CategorySerializer, CommentSerializer,
                                 GenreSerializer, ReviewSerializer,
                                 SignUpSerializer, TitleGetSerializer,
-                                TitlePostSerializer, TokenSerializer,
+                                TitleCreateSerializer, TokenSerializer,
                                 UserSerializer)
 from api.v1.utils import send_confirmation_code
+from api.v1.viewsets import (ListCreateDestroyViewSet,
+                             ListCreateRetrievePatchDestroyViewSet)
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
 
-class BaseViewSet(
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.CreateModelMixin,
-    viewsets.GenericViewSet,
-):
-    """Базовый класс фильтрует выдачу у наследников."""
-
-    filter_backends = (
-        filters.SearchFilter,
-    )
-    search_fields = (
-        'name',
-    )
-
-
-class PatchModelMixin:
-    """Миксин частично обновляет ресурс."""
-
-    def perform_patch(self, serializer, **kwargs):
-        serializer.save()
-
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(
-            instance,
-            data=request.data,
-            partial=True,
-        )
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
-
-    def perform_update(self, serializer):
-        serializer.save()
-
-
-class CategoryViewSet(BaseViewSet):
+class CategoryViewSet(ListCreateDestroyViewSet):
     """
     Обрабатывает запросы, связанные с категориями.
 
@@ -79,7 +43,7 @@ class CategoryViewSet(BaseViewSet):
     )
 
 
-class GenreViewSet(BaseViewSet):
+class GenreViewSet(ListCreateDestroyViewSet):
     """
     Обрабатывает запросы, связанные с категориями.
 
@@ -96,8 +60,7 @@ class GenreViewSet(BaseViewSet):
     )
 
 
-class TitleViewSet(mixins.RetrieveModelMixin, PatchModelMixin,
-                   BaseViewSet):
+class TitleViewSet(ListCreateRetrievePatchDestroyViewSet):
     """
     Обрабатывает запросы, связанные с записями.
 
@@ -130,21 +93,15 @@ class TitleViewSet(mixins.RetrieveModelMixin, PatchModelMixin,
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
             return TitleGetSerializer
-        return TitlePostSerializer
+        return TitleCreateSerializer
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(ListCreateRetrievePatchDestroyViewSet):
     """Получает список review, отдельный элемент."""
 
     serializer_class = ReviewSerializer
     permission_classes = (
         IsAdminModeratorAuthorOrReadOnly,
-    )
-    http_method_names = (
-        'get',
-        'post',
-        'patch',
-        'delete',
     )
 
     def get_queryset(self):
@@ -168,18 +125,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         )
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(ListCreateRetrievePatchDestroyViewSet):
     """Получение списка comment, отдельного элемента."""
 
     serializer_class = CommentSerializer
     permission_classes = (
         IsAdminModeratorAuthorOrReadOnly,
-    )
-    http_method_names = (
-        'get',
-        'post',
-        'patch',
-        'delete',
     )
 
     def get_queryset(self):
@@ -276,7 +227,7 @@ class APIToken(APIView):
         )
 
 
-class UsersViewSet(ModelViewSet):
+class UsersViewSet(ListCreateRetrievePatchDestroyViewSet):
     """
     Обрабатывает запросы, связанные с пользователями.
 
@@ -295,12 +246,6 @@ class UsersViewSet(ModelViewSet):
     )
     search_fields = (
         'username',
-    )
-    http_method_names = (
-        'get',
-        'post',
-        'patch',
-        'delete',
     )
 
     @action(
