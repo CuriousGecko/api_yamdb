@@ -21,7 +21,8 @@ class PatchModelMixin:
         if queryset._prefetch_related_lookups:
             instance._prefetched_objects_cashe = {}
             prefetch_related_objects(
-                [instance], *queryset._prefetch_related_lookups
+                [instance],
+                *queryset._prefetch_related_lookups,
             )
         return Response(serializer.data)
 

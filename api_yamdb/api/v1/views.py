@@ -16,8 +16,8 @@ from api.v1.permissions import (IsAdmin, IsAdminModeratorAuthorOrReadOnly,
                                 IsAdminOrReadOnly, OwnerOnly)
 from api.v1.serializers import (CategorySerializer, CommentSerializer,
                                 GenreSerializer, ReviewSerializer,
-                                SignUpSerializer, TitleGetSerializer,
-                                TitleCreateSerializer, TokenSerializer,
+                                SignUpSerializer, TitleCreateSerializer,
+                                TitleGetSerializer, TokenSerializer,
                                 UserSerializer)
 from api.v1.utils import send_confirmation_code
 from api.v1.viewsets import (ListCreateDestroyViewSet,
@@ -79,7 +79,7 @@ class TitleViewSet(ListCreateRetrievePatchDestroyViewSet):
         ).order_by(
             'name',
         ).annotate(
-            rating=Avg('reviews__score')
+            rating=Avg('reviews__score'),
         )
     )
     filter_backends = (

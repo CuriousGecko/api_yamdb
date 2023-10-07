@@ -39,7 +39,9 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         many=True,
     )
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.IntegerField(
+        read_only=True,
+    )
 
     class Meta:
         fields = (
@@ -75,7 +77,9 @@ class ReviewSerializer(ModelSerializer):
         slug_field='username',
         default=serializers.CurrentUserDefault(),
     )
-    title = serializers.HiddenField(default=CurrentTitleDefault())
+    title = serializers.HiddenField(
+        default=CurrentTitleDefault(),
+    )
 
     class Meta:
         model = Review
@@ -91,7 +95,7 @@ class ReviewSerializer(ModelSerializer):
             UniqueTogetherValidator(
                 queryset=Review.objects.all(),
                 fields=('title', 'author'),
-                message='Вы уже оставляли отзыв к этому произведению.'
+                message='Вы уже оставляли отзыв к этому произведению.',
             )
         ]
 
