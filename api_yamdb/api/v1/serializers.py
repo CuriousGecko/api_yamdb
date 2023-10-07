@@ -29,10 +29,14 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
 
-class TitleGetSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
-    genre = GenreSerializer(
-        read_only=True,
+class TitleCreateSerializer(serializers.ModelSerializer):
+    category = SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+    )
+    genre = SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
         many=True,
     )
     rating = serializers.IntegerField(read_only=True)
@@ -50,14 +54,10 @@ class TitleGetSerializer(serializers.ModelSerializer):
         model = Title
 
 
-class TitlePostSerializer(TitleGetSerializer):
-    category = SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all(),
-    )
-    genre = SlugRelatedField(
-        slug_field='slug',
-        queryset=Genre.objects.all(),
+class TitleGetSerializer(TitleCreateSerializer):
+    category = CategorySerializer()
+    genre = GenreSerializer(
+        read_only=True,
         many=True,
     )
 
@@ -75,10 +75,7 @@ class ReviewSerializer(ModelSerializer):
         slug_field='username',
         default=serializers.CurrentUserDefault(),
     )
-    title = serializers.PrimaryKeyRelatedField(
-        queryset=Title.objects.all(),
-        default=CurrentTitleDefault(),
-    )
+    title = serializers.HiddenField(default=CurrentTitleDefault())
 
     class Meta:
         model = Review
