@@ -115,13 +115,12 @@ class ReviewViewSet(ListCreateRetrievePatchDestroyViewSet):
         )
 
     def perform_create(self, serializer):
-        title = get_object_or_404(
-            Title,
-            pk=self.kwargs.get('title_id'),
-        )
         serializer.save(
             author=self.request.user,
-            title=title,
+            title=get_object_or_404(
+                Title,
+                pk=self.kwargs.get('title_id'),
+            )
         )
 
 
@@ -144,13 +143,12 @@ class CommentViewSet(ListCreateRetrievePatchDestroyViewSet):
         )
 
     def perform_create(self, serializer):
-        review = get_object_or_404(
-            Review,
-            pk=self.kwargs.get('review_id'),
-        )
         serializer.save(
             author=self.request.user,
-            review=review,
+            review=get_object_or_404(
+                Review,
+                pk=self.kwargs.get('review_id'),
+            )
         )
 
 
@@ -165,16 +163,15 @@ class APISignUp(APIView):
             username = serializer.data.get('username')
             email = serializer.data.get('email')
             if User.objects.filter(
-                username=username,
-                email=email,
-            ).exists():
-                user = User.objects.get(
                     username=username,
                     email=email,
-                )
+            ).exists():
                 send_confirmation_code(
-                    user,
-                    email,
+                    user=User.objects.get(
+                        username=username,
+                        email=email,
+                    ),
+                    email=email,
                 )
                 return Response(
                     serializer.data,
@@ -184,13 +181,12 @@ class APISignUp(APIView):
         serializer.save()
         username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
-        user = User.objects.get(
-            username=username,
-            email=email,
-        )
         send_confirmation_code(
-            user,
-            email,
+            user=User.objects.get(
+                username=username,
+                email=email,
+            ),
+            email=email,
         )
         return Response(
             serializer.validated_data,
@@ -253,18 +249,17 @@ class UsersViewSet(ListCreateRetrievePatchDestroyViewSet):
             'get'
         ],
         permission_classes=(
-            OwnerOnly,
+                OwnerOnly,
         ),
         url_path='me',
         detail=False,
     )
     def me_path(self, request):
-        user = get_object_or_404(
-            User,
-            username=request.user,
-        )
         serializer = UserSerializer(
-            user,
+            get_object_or_404(
+                User,
+                username=request.user,
+            )
         )
         return Response(
             serializer.data,
@@ -272,12 +267,11 @@ class UsersViewSet(ListCreateRetrievePatchDestroyViewSet):
 
     @me_path.mapping.patch
     def me_path_patch(self, request):
-        user = get_object_or_404(
-            User,
-            username=request.user,
-        )
         serializer = UserSerializer(
-            user,
+            get_object_or_404(
+                User,
+                username=request.user,
+            ),
             data=request.data,
             partial=True,
         )

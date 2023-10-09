@@ -146,10 +146,6 @@ class TokenSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        # AssertionError: Если POST-запрос к `/api/v1/users/`
-        # содержит корректные данные - в ответе должны содержаться
-        # данные нового пользователя.
-        # Сейчас ключ role отсутствует либо содержит некорректные данные.
         fields = (
             'role',
             'username',
