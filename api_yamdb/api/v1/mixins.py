@@ -5,7 +5,7 @@ from rest_framework.response import Response
 class PatchModelMixin:
     """Миксин частично обновляет ресурс."""
 
-    def perform_patch(self, serializer, **kwargs):
+    def perform_update(self, serializer, **kwargs):
         serializer.save()
 
     def partial_update(self, request, *args, **kwargs):
@@ -25,6 +25,3 @@ class PatchModelMixin:
                 *queryset._prefetch_related_lookups,
             )
         return Response(serializer.data)
-
-    def perform_update(self, serializer):
-        serializer.save()
