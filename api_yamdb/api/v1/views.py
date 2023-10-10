@@ -249,7 +249,7 @@ class UsersViewSet(ListCreateRetrievePatchDestroyViewSet):
             'get'
         ],
         permission_classes=(
-                OwnerOnly,
+            OwnerOnly,
         ),
         url_path='me',
         detail=False,
